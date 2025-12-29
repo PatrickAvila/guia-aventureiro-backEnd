@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const mongoose = require('mongoose');
 const connectDB = require('./src/config/database');
 const requestLogger = require('./src/middleware/requestLogger');
 
