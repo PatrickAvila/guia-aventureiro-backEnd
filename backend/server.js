@@ -10,6 +10,7 @@ const connectDB = require('./src/config/database');
 const requestLogger = require('./src/middleware/requestLogger');
 
 const app = express();
+app.set('trust proxy', 1); // Confia no proxy do Render
 const PORT = process.env.PORT || 3000;
 
 // Conectar MongoDB
