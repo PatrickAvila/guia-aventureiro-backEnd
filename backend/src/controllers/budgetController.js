@@ -37,7 +37,6 @@ exports.addExpense = async (req, res, next) => {
 
     // Recalcular total gasto
     const totalSpent = (itinerary.expenses || []).reduce((sum, expense) => {
-      // TODO: Converter moedas diferentes para a moeda do orçamento
       return sum + expense.amount;
     }, 0);
 

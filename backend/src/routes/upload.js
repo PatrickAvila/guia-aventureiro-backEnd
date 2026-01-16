@@ -30,14 +30,26 @@ const upload = multer({
  */
 router.post('/', auth, upload.single('photo'), async (req, res) => {
   try {
+    console.log('📥 Recebendo upload...');
+    console.log('📥 Headers:', req.headers['content-type']);
+    console.log('📥 Body:', req.body);
+    console.log('📥 File:', req.file ? 'Arquivo presente' : 'Nenhum arquivo');
+    
     if (!req.file) {
+      console.log('❌ Nenhum arquivo recebido');
       return res.status(400).json({ message: 'Nenhuma foto foi enviada' });
     }
+
+    console.log('📥 Nome do arquivo:', req.file.originalname);
+    console.log('📥 Tipo:', req.file.mimetype);
+    console.log('📥 Tamanho:', req.file.size, 'bytes');
 
     // Converter buffer para base64
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
+    console.log('☁️ Enviando para Cloudinary...');
+    
     // Upload para Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: 'guia-aventureiro',
@@ -48,12 +60,15 @@ router.post('/', auth, upload.single('photo'), async (req, res) => {
       ],
     });
 
+    console.log('✅ Upload concluído:', result.secure_url);
+
     res.status(200).json({
       url: result.secure_url,
       publicId: result.public_id,
     });
   } catch (error) {
-    console.error('Erro ao fazer upload:', error);
+    console.error('❌ Erro ao fazer upload:', error);
+    console.error('❌ Stack:', error.stack);
     res.status(500).json({ message: 'Erro ao fazer upload da foto' });
   }
 });

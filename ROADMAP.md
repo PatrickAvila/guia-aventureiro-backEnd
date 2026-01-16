@@ -4,13 +4,47 @@
 
 ## 📋 STATUS GERAL
 
-- ✅ **Concluídas:** 19 features
+- ✅ **Concluídas:** 20 features (+ Deploy em Produção)
 - 🚧 **Em progresso:** 0 features
 - 📋 **Planejadas:** 12 features
+
+### 🎯 **Marcos Alcançados:**
+- ✅ MVP 100% funcional
+- ✅ Backend em produção (Render.com)
+- ✅ Mobile pronto para build
+- ✅ Documentação completa
+- 📱 Próximo: Build iOS/Android
 
 ---
 
 ## ✅ CONCLUÍDAS
+
+### ~~0. Deploy em Produção~~ 🚀 **CONCLUÍDO - 29/12/2025**
+
+**Infraestrutura implementada:**
+- ✅ Backend deployado no Render.com (plano Free)
+- ✅ URL produção: https://guia-aventureiro-backend.onrender.com
+- ✅ MongoDB Atlas otimizado (32 índices)
+- ✅ Winston logger com file rotation
+- ✅ Health check endpoint (/health)
+- ✅ Auto-deploy configurado (Git push → Deploy)
+- ✅ Variáveis de ambiente seguras
+- ✅ Repositórios separados (backend + mobile)
+
+**Métricas:**
+- Build time: ~2 minutos
+- Memory usage: 93 MB
+- Cold start: 30-60 segundos (plano Free)
+- Database: MongoDB Atlas M0 Free
+- Logs: Production mode (warn/error)
+
+**Arquivos:**
+- `backend/server.js` (mongoose import fix)
+- `backend/package.json` (winston dependency)
+- `mobile/src/config/env.ts` (prod API URL)
+- `backend/src/utils/createIndexes.js` (32 índices)
+
+---
 
 ### ~~1. Sistema de Busca de Destinos~~ ✅ **CONCLUÍDO - 24/12/2025**
 

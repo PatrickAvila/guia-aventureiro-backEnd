@@ -201,7 +201,7 @@ exports.updateItinerary = async (req, res) => {
     // Atualizar campos permitidos
     const allowedUpdates = [
       'title', 'destination', 'startDate', 'endDate', 'budget',
-      'preferences', 'days', 'status', 'isPublic'
+      'preferences', 'days', 'status', 'isPublic', 'rating'
     ];
 
     allowedUpdates.forEach(field => {
@@ -250,6 +250,11 @@ exports.deleteItinerary = async (req, res) => {
     }
 
     await itinerary.deleteOne();
+
+    // Atualizar conquistas após exclusão
+    checkAndUnlockAchievements(req.userId).catch(err => {
+      if (typeof logger !== 'undefined') logger.error('Erro ao verificar conquistas:', err);
+    });
 
     res.json({ message: 'Roteiro excluído com sucesso.' });
   } catch (error) {
@@ -337,31 +342,48 @@ exports.removeCollaborator = async (req, res) => {
 // Duplicar roteiro
 exports.duplicateItinerary = async (req, res) => {
   try {
+    console.log('📋 Duplicando roteiro:', req.params.id);
     const original = await Itinerary.findById(req.params.id);
 
     if (!original) {
+      console.log('❌ Roteiro não encontrado');
       return res.status(404).json({ message: 'Roteiro não encontrado.' });
     }
 
+    console.log('✅ Roteiro original encontrado:', original.title);
+    
+    const duplicateData = original.toObject();
+    
+    // Remover campos que não devem ser duplicados
+    delete duplicateData._id;
+    delete duplicateData.createdAt;
+    delete duplicateData.updatedAt;
+    delete duplicateData.__v;
+    delete duplicateData.publicLink; // Campo único
+    delete duplicateData.rating; // Não duplicar avaliação
+    
     const duplicate = new Itinerary({
-      ...original.toObject(),
-      _id: undefined,
+      ...duplicateData,
       owner: req.userId,
       title: `${original.title} (cópia)`,
       collaborators: [],
       status: 'rascunho',
+      isPublic: false,
       lastEditedBy: req.userId,
-      createdAt: undefined,
-      updatedAt: undefined,
     });
 
+    console.log('💾 Salvando duplicata...');
     await duplicate.save();
+    
+    console.log('✅ Roteiro duplicado com sucesso:', duplicate._id);
 
     res.status(201).json({
       message: 'Roteiro duplicado com sucesso.',
       itinerary: duplicate,
     });
   } catch (error) {
+    console.error('❌ Erro ao duplicar roteiro:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({ message: 'Erro ao duplicar roteiro.', error: error.message });
   }
 };

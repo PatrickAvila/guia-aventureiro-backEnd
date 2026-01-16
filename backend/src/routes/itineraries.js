@@ -39,12 +39,6 @@ router.put('/:id/expenses/:expenseId', validateUpdateExpense, budgetController.u
 router.delete('/:id/expenses/:expenseId', validateExpenseId, budgetController.deleteExpense);
 router.get('/:id/budget-summary', validateItineraryId, budgetController.getBudgetSummary);
 
-// Avaliações
-router.post('/:id/rating', ratingController.addRating);
-router.put('/:id/rating', ratingController.updateRating);
-router.delete('/:id/rating', ratingController.deleteRating);
-router.get('/rated/list', ratingController.getRatedItineraries);
-
 // Compartilhamento
 router.post('/:id/share', shareController.generateShareLink);
 router.delete('/:id/share', shareController.revokeShareLink);

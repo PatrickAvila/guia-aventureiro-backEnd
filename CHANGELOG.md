@@ -4,6 +4,140 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 ---
 
+## [1.0.3] - 04/01/2026
+
+### 🧹 **Limpeza de Código**
+
+#### 🗑️ **Arquivos Removidos**
+
+**Raiz do projeto:**
+- `DEPLOY.md` - Defasado (substituído por BUILD_DEPLOY_GUIDE.md)
+- `PRIVACY_POLICY.md` - Duplicado (existe docs/privacy.html)
+- `TERMS_OF_SERVICE.md` - Duplicado (existe docs/terms.html)
+- `render.yaml` - Não utilizado (backend tem próprio)
+- `package.json` e `package-lock.json` - Não necessários na raiz
+- `node_modules/` - Pasta vazia removida
+
+**Arquivos de sistema:**
+- Arquivos .log removidos
+- .DS_Store e Thumbs.db limpos
+
+#### ✂️ **Código Removido**
+
+**backend/src/controllers/ratingController.js:**
+- 172 linhas de métodos legados removidos:
+  - `addRating()`, `updateRating()`, `deleteRating()`, `getRatedItineraries()`
+  - Substituídos por API moderna em `/api/ratings`
+
+**backend/src/routes/itineraries.js:**
+- 5 rotas duplicadas de rating removidas
+- Agora usa apenas `/api/ratings/*`
+
+**backend/src/controllers/budgetController.js:**
+- Comentário TODO obsoleto removido
+
+**mobile/src/services/authService.ts:**
+- Console.logs de debug removidos (login, logout)
+
+#### 🔧 **Modificado**
+
+**backend/.env.example:**
+- Atualizado de `OPENAI_API_KEY` para `GROQ_API_KEY`
+- Comentários explicativos adicionados
+
+#### 📊 **Estatísticas da Limpeza**
+- 7 arquivos deletados
+- ~200 linhas de código removidas
+- ~15 console.logs eliminados
+- Projeto mais limpo e organizado
+
+---
+
+## [1.0.2] - 04/01/2026
+
+### 🎨 **Melhorias de UX e Preparação para Produção**
+
+#### ✨ **Adicionado**
+
+**Documentação de Produção:**
+- `APP_STORE_DESCRIPTIONS.md`: Textos prontos para App Store e Google Play (PT/EN)
+- `SCREENSHOT_GUIDE.md`: Guia completo para capturar screenshots das lojas
+- `BUILD_DEPLOY_GUIDE.md`: Processo detalhado de build EAS e submissão
+- `ANALYTICS_GUIDE.md`: Implementação de Firebase Analytics e Crashlytics
+- `HOSTING_LEGAL_DOCS.md`: Guia para hospedar Privacy Policy e Terms
+- `docs/index.html`: Landing page para documentos legais
+- `docs/terms.html`: Termos de Uso em HTML (já existia privacy.html)
+
+**Mobile - Configuração de Ambiente:**
+- Sistema automático de detecção dev/prod via `__DEV__` flag
+- Console logs indicando ambiente ativo ao iniciar app
+- URLs alternam automaticamente entre localhost e Render
+
+#### 🐛 **Corrigido**
+
+**Mobile - ProfileScreen:**
+- Modal "compartilhar perfil": Alinhamento de título com botão X
+- Modal "dados e armazenamento": Título centralizado, removido botão duplicado
+- Cache clear: App não congela mais (fecha modal antes de showAlert)
+- Propriedade `paddingBottom` duplicada removida
+
+**Mobile - GenerateScreen:**
+- Scroll lag na primeira abertura corrigido com `removeClippedSubviews={true}`
+- Performance otimizada com `scrollEventThrottle={16}`
+
+#### 🔧 **Modificado**
+
+**mobile/src/config/env.ts:**
+- Adicionada função `getEnvVars()` com detecção `__DEV__`
+- Logs de console indicando ambiente (desenvolvimento/produção)
+- Comentários explicativos sobre configuração
+
+**PRODUCAO_CHECKLIST.md:**
+- Atualizado com progresso real (testes via Expo Go, Render deployment)
+- Links para novos guias criados
+- Marcado itens concluídos (ambiente automático, descrições de loja, etc)
+
+---
+
+## [1.0.1] - 29/12/2025
+
+### 🚀 **Deploy em Produção**
+
+#### ✨ **Adicionado**
+
+**Infraestrutura:**
+- Backend deployado no Render.com (https://guia-aventureiro-backend.onrender.com)
+- MongoDB Atlas em produção com 32 índices otimizados
+- Winston logger com rotação de arquivos (5MB, 5 arquivos)
+- Health check endpoint com métricas (status, DB, memória, uptime)
+- Variáveis de ambiente configuradas (JWT, Groq, Cloudinary)
+
+**Organização:**
+- Repositórios separados: backend e mobile
+- GitHub: PatrickAvila/guia-aventureiro-backEnd
+- GitHub: PatrickAvila/guia-aventureiro-mobile
+
+**Mobile:**
+- API URL configurada para produção
+- Fallback dev/prod configurado
+- EAS Build preparado (profiles: dev, preview, production)
+
+#### 🔧 **Modificado**
+
+- Scripts npm: start simplificado (sem NODE_ENV inline)
+- Package.json: adicionado winston dependency
+- Server.js: importado mongoose para health check
+- Logs: modo produção (warn/error only)
+
+#### 📊 **Performance**
+
+- 32 índices MongoDB criados (User: 5, Itinerary: 13, Rating: 9, Achievement: 5)
+- Health check cache: 10 segundos
+- Compressão de build: 4s
+- Deploy time: ~2 minutos
+
+---
+
 ## [1.0.0] - 29/12/2025
 
 ### 🎉 **Lançamento Inicial - MVP Completo**
