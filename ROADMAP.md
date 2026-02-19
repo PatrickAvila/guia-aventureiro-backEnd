@@ -4,7 +4,7 @@
 
 ## 📋 STATUS GERAL
 
-- ✅ **Concluídas:** 20 features (+ Deploy em Produção)
+- ✅ **Concluídas:** 21 features (+ Deploy em Produção)
 - 🚧 **Em progresso:** 0 features
 - 📋 **Planejadas:** 12 features
 
@@ -13,6 +13,7 @@
 - ✅ Backend em produção (Render.com)
 - ✅ Mobile pronto para build
 - ✅ Documentação completa
+- ✅ Sistema de tutorial híbrido (onboarding + tooltips contextuais)
 - 📱 Próximo: Build iOS/Android
 
 ---
@@ -96,18 +97,36 @@
 ---
 
 ### ~~4. Onboarding e Tutorial~~ ✅ **CONCLUÍDO**
-**Implementado em:** 24/12/2025
- - 24/12/2025**
-- ✅ Tutorial interativo com 5 slides
+**Implementado em:** 24/12/2025 (inicial) | 11/02/2026 (sistema híbrido completo)
+
+**Sistema Híbrido de Tutorial:**
+
+**Onboarding Inicial (5 slides):**
+- ✅ Tutorial interativo com swiper
 - ✅ Navegação por swipe e botão
 - ✅ Botão "Pular" disponível
 - ✅ Indicadores de progresso (dots)
-- ✅ Não exibe novamente após conclusão
+- ✅ Checkbox "Não mostrar novamente"
 - ✅ Cores e ícones ilustrativos
+
+**Tooltips Contextuais (5 tooltips):**
+- ✅ Componente Tooltip reutilizável com animações
+- ✅ Efeito spotlight com overlay escurecido
+- ✅ DashboardScreen: "Criar primeiro roteiro"
+- ✅ GenerateScreen: "Usar IA"
+- ✅ ItineraryDetailScreen: "Controle de orçamento"
+- ✅ ExploreScreen: "Descobrir roteiros"
+- ✅ ProfileScreen: "Conquistas"
+- ✅ Hook useTooltip para gerenciamento centralizado
+- ✅ Persistência em AsyncStorage
+- ✅ Botão "Rever Tutorial" com reset completo
 
 **Arquivos:**
 - `mobile/src/screens/OnboardingScreen.tsx`
 - `mobile/src/navigation/RootNavigator.tsx`
+- `mobile/src/components/Tooltip.tsx` (novo)
+- `mobile/src/hooks/useTooltip.ts` (novo)
+- `backend/src/models/User.js` (campos hasCompletedOnboarding e tooltipsShown)
 
 ---
 

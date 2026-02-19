@@ -102,6 +102,14 @@ Retorna dados do usuário autenticado.
   "email": "joao@example.com",
   "profilePicture": "https://res.cloudinary.com/...",
   "preferences": { ... },
+  "hasCompletedOnboarding": false,
+  "tooltipsShown": {
+    "createItinerary": false,
+    "useAI": false,
+    "budget": false,
+    "explore": false,
+    "achievements": false
+  },
   "stats": {
     "level": 5,
     "xp": 1250,
@@ -113,6 +121,15 @@ Retorna dados do usuário autenticado.
   "createdAt": "2025-01-15T10:30:00Z"
 }
 ```
+
+**Campos de Tutorial:**
+- `hasCompletedOnboarding` (boolean): Se usuário viu onboarding inicial
+- `tooltipsShown` (object): Tooltips contextuais já visualizados
+  - `createItinerary`: Tooltip de criar primeiro roteiro
+  - `useAI`: Tooltip de usar IA para gerar roteiro
+  - `budget`: Tooltip de controle de orçamento
+  - `explore`: Tooltip de explorar roteiros públicos
+  - `achievements`: Tooltip de conquistas
 
 ---
 

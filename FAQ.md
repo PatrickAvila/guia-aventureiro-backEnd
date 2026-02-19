@@ -25,6 +25,37 @@ A sincronização acontece automaticamente quando você voltar online.
 
 ---
 
+## 🎓 Tutorial e Ajuda
+
+### **Como funciona o tutorial do app?**
+
+O Guia do Aventureiro possui um **sistema de tutorial híbrido**:
+
+1. **Onboarding (5 slides):** Aparece na primeira vez que você abre o app antes de fazer login, mostrando as principais funcionalidades.
+
+2. **Tooltips contextuais:** Durante o uso do app, aparecem dicas visuais explicando recursos importantes:
+   - 👋 Criar primeiro roteiro (Dashboard)
+   - 🤖 Usar IA para gerar roteiro (Tela de geração)
+   - 💰 Controle de orçamento (Detalhe do roteiro)
+   - 🌍 Explorar roteiros públicos (Tela Explorar)
+   - 🏆 Conquistas (Perfil)
+
+Cada tooltip aparece **apenas uma vez** e você pode fechá-lo quando quiser.
+
+### **Posso ver o tutorial novamente?**
+
+Sim! Vá em **Perfil → Configurações → Rever Tutorial**. Você será desconectado e o app mostrará todo o tutorial completo novamente quando fizer login.
+
+### **Como desativar os tooltips?**
+
+Os tooltips aparecem apenas uma vez automaticamente. Se preferir, você pode fechá-los imediatamente ao clicar no botão "Entendi" ou "X".
+
+### **Pulei o onboarding por engano, como ver de novo?**
+
+Use o botão **"Rever Tutorial"** em Perfil → Configurações para resetar todas as dicas e ver o onboarding novamente.
+
+---
+
 ## 🤖 Geração de Roteiros com IA
 
 ### **Como funciona a IA?**

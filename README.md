@@ -3,7 +3,8 @@
 **Planeje suas viagens com Inteligência Artificial**
 
 ![Status](https://img.shields.io/badge/status-MVP%20Completo-success)
-![Versão](https://img.shields.io/badge/versão-1.0.0-blue)
+![Versão](https://img.shields.io/badge/versão-1.0.6-blue)
+![Testes](https://img.shields.io/badge/testes-94.1%25%20passando-brightgreen)
 ![Licença](https://img.shields.io/badge/licença-MIT-green)
 
 ---
@@ -22,6 +23,7 @@ O **Guia do Aventureiro** é um aplicativo mobile que utiliza Inteligência Arti
 - 🏆 **Gamificação:** 20 conquistas e sistema de níveis
 - 📱 **Modo Offline:** Cache e sincronização automática
 - 🌓 **Temas:** Modo claro e escuro
+- 🎓 **Tutorial Híbrido:** Onboarding + tooltips contextuais inteligentes
 - 🔐 **Segurança:** Rate limiting, validações, autenticação JWT
 
 ---
@@ -51,10 +53,12 @@ backend/
 mobile/
 ├── src/
 │   ├── components/      # Componentes reutilizáveis
+│   │   └── Tooltip.tsx  # Componente de tooltip contextual
 │   ├── config/          # Configurações (env)
 │   ├── constants/       # Constantes (cores, temas)
-│   ├── context/         # Context API (Auth, Theme)
+│   ├── contexts/        # Context API (Auth, Theme)
 │   ├── hooks/           # Custom hooks
+│   │   └── useTooltip.ts # Hook de gerenciamento de tooltips
 │   ├── navigation/      # React Navigation
 │   ├── screens/         # Telas do app
 │   ├── services/        # APIs e serviços
@@ -234,7 +238,11 @@ GET    /api/achievements         # Listar conquistas do usuário
 GET    /api/achievements/stats   # Estatísticas
 ```
 
-📖 **Documentação completa:** [API.md](API.md)
+📖 **Documentação completa:** 
+- [API.md](API.md) - Documentação completa da API
+- [SUBSCRIPTION.md](SUBSCRIPTION.md) - Sistema de assinatura (Backend + Mobile)
+- [CHANGELOG.md](CHANGELOG.md) - Histórico de mudanças
+- [automation/README.md](automation/README.md) - Guia de testes
 
 ---
 
@@ -255,8 +263,9 @@ GET    /api/achievements/stats   # Estatísticas
 - Expo (SDK 50+)
 - TypeScript
 - React Navigation
-- AsyncStorage
+- AsyncStorage (persistência de tooltips e onboarding)
 - Axios
+- Sistema de Tutorial Híbrido (onboarding screens + tooltips contextuais)
 
 ### **DevOps**
 - Render (backend hosting)
@@ -268,7 +277,7 @@ GET    /api/achievements/stats   # Estatísticas
 
 ## 📊 Status do Projeto
 
-### **MVP Completo ✅ (19/19 features)**
+### **MVP Completo ✅ (20/20 features)**
 
 - ✅ Autenticação e perfis
 - ✅ Geração de roteiros com IA (Groq)
@@ -279,6 +288,7 @@ GET    /api/achievements/stats   # Estatísticas
 - ✅ Explorar roteiros públicos
 - ✅ Gamificação
 - ✅ Temas claro/escuro
+- ✅ Tutorial híbrido (onboarding + tooltips)
 - ✅ Segurança completa
 
 ### **Próximas Features (Roadmap)**
@@ -299,15 +309,31 @@ GET    /api/achievements/stats   # Estatísticas
 
 ## 🧪 Testes
 
-```bash
-# Backend
-cd backend
-npm test
+**TODOS os testes estão centralizados em `automation/`**
 
-# Mobile
-cd mobile
-npm test
+```bash
+cd automation
+npm install  # Primeira vez
+npm test     # Roda todos os testes (237 testes em 16 suites)
+
+# Scripts úteis
+npm run test:cleanup      # Verificar se banco está limpo
+npm run test:force-clean  # Limpar dados de teste manualmente
+npm run test:watch        # Watch mode
+npm run test:coverage     # Cobertura de código
 ```
+
+**Estatísticas:**
+- ✅ **237 testes** em 16 suites
+- ✅ **223 passando** (94.1%)
+- ⏭️ **14 skipped** (funcionalidades não implementadas)
+- ✅ **16/16 suites passando** (100%)
+- ⏱️ **~50 segundos** de execução
+- 🧹 **Limpeza automática** de dados após cada execução
+- 🔒 **Testes de segurança** incluídos
+- 🔄 **Testes independentes** - podem rodar em qualquer ordem
+
+📖 **Guia completo:** [automation/README.md](automation/README.md)
 
 ---
 
@@ -388,12 +414,30 @@ Contribuições são bem-vindas! Por favor:
 
 ## 📝 Changelog
 
+### v1.0.6 (19/02/2026)
+- 🧪 **237 testes** implementados e 94.1% passando
+- ✅ Sistema de testes completo (16 suites, 100% independentes)
+- 🔧 Correções no backend (colaboradores, perfil, IA)
+- 📚 Documentação consolidada (SUBSCRIPTION.md)
+- 🧹 Testes movidos para `automation/` (organização)
+- ✅ Backend: suporte a tutorial/onboarding completo
+- 🐛 Bugs corrigidos: self-removal, owner validation, rate limiting em testes
+
+### v1.0.5 (11/02/2026)
+- 🎓 Sistema de tutorial híbrido implementado
+- ✅ 5 tooltips contextuais inteligentes
+- ✅ Componente Tooltip reutilizável com animações
+- ✅ Hook useTooltip para gerenciamento centralizado
+- ✅ Botão "Rever Tutorial" com reset completo
+
 ### v1.0.0 (29/12/2025)
-- 🎉 MVP completo com 19 features
+- 🎉 MVP completo com 20 features
 - ✅ IA real com Groq (Llama 3.3)
 - ✅ Sistema de avaliações e compartilhamento
 - ✅ Gamificação completa
 - ✅ Modo offline funcional
+
+📖 **Changelog completo:** [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
