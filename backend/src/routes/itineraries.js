@@ -8,6 +8,13 @@ const budgetController = require('../controllers/budgetController');
 const auth = require('../middleware/auth');
 const { aiGenerationLimiter } = require('../middleware/rateLimiter');
 const { 
+  canCreateItinerary, 
+  canUseAI, 
+  canAddCollaborator,
+  canShareItinerary,
+  incrementUsage 
+} = require('../middleware/checkLimits');
+const { 
   validateCreateItinerary, 
   validateUpdateItinerary, 
   validateItineraryId,
@@ -23,14 +30,14 @@ router.use(auth);
 
 router.get('/', validatePagination, itineraryController.getUserItineraries);
 router.get('/:id', validateItineraryId, itineraryController.getItineraryById);
-router.post('/', validateCreateItinerary, itineraryController.createItinerary);
-router.post('/generate', aiGenerationLimiter, itineraryController.generateItineraryWithAI);
+router.post('/', canCreateItinerary, validateCreateItinerary, itineraryController.createItinerary);
+router.post('/generate', canUseAI, aiGenerationLimiter, itineraryController.generateItineraryWithAI);
 router.put('/:id', validateUpdateItinerary, itineraryController.updateItinerary);
 router.delete('/:id', validateItineraryId, itineraryController.deleteItinerary);
-router.post('/:id/duplicate', validateItineraryId, itineraryController.duplicateItinerary);
+router.post('/:id/duplicate', canCreateItinerary, validateItineraryId, itineraryController.duplicateItinerary);
 
 // Colaboradores
-router.post('/:id/collaborators', validateAddCollaborator, itineraryController.addCollaborator);
+router.post('/:id/collaborators', canAddCollaborator, validateAddCollaborator, itineraryController.addCollaborator);
 router.delete('/:id/collaborators/:collaboratorId', validateItineraryId, itineraryController.removeCollaborator);
 
 // Orçamento e Gastos
@@ -40,7 +47,7 @@ router.delete('/:id/expenses/:expenseId', validateExpenseId, budgetController.de
 router.get('/:id/budget-summary', validateItineraryId, budgetController.getBudgetSummary);
 
 // Compartilhamento
-router.post('/:id/share', shareController.generateShareLink);
+router.post('/:id/share', canShareItinerary, shareController.generateShareLink);
 router.delete('/:id/share', shareController.revokeShareLink);
 
 module.exports = router;

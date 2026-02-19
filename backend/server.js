@@ -74,23 +74,34 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logger (auditoria segura)
 app.use(requestLogger);
 
-// Rate limiting global
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 em dev, 100 em prod
-  message: 'Muitas requisições. Tente novamente em 15 minutos.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// Rate limiting global (desabilitado para localhost)
+if (process.env.NODE_ENV !== 'test' && process.env.TEST_MODE !== 'true') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 em dev, 100 em prod
+    message: 'Muitas requisições. Tente novamente em 15 minutos.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use(limiter);
+}
 
 // Rate limiting específico para autenticação (mais restritivo)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // Apenas 5 tentativas de login/cadastro por 15min
+  max: process.env.NODE_ENV === 'test' ? 1000 : 5, // 1000 em testes, 5 em produção
   skipSuccessfulRequests: true, // Não contar requisições bem-sucedidas
   message: 'Muitas tentativas. Tente novamente em 15 minutos.',
 });
+
+// Endpoint para limpar bloqueios de IP (apenas em modo de teste)
+if (process.env.TEST_MODE === 'true') {
+  const { clearBlocks } = require('./src/middleware/ipBlocker');
+  app.post('/test/clear-blocks', (req, res) => {
+    clearBlocks();
+    res.json({ message: 'Bloqueios limpos com sucesso' });
+  });
+}
 
 // Rotas
 app.get('/health', async (req, res) => {
@@ -121,17 +132,30 @@ app.get('/health', async (req, res) => {
   res.status(healthcheck.status === 'OK' ? 200 : 503).json(healthcheck);
 });
 
-app.use('/api/auth', authLimiter, require('./src/routes/auth')); // Rate limit extra
+// Rota pública para visualizar roteiros compartilhados (sem autenticação)
+const shareController = require('./src/controllers/shareController');
+app.get('/api/shared/:shareId', shareController.getSharedItinerary);
+
+app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/subscriptions', require('./src/routes/subscriptions')); // Sistema de assinatura
+app.use('/api/roteiros', require('./src/routes/maps')); // Rotas de mapa (antes de itineraries para evitar conflito)
 app.use('/api/roteiros', require('./src/routes/itineraries'));
+app.use('/api/roteiros', require('./src/routes/budget')); // Rotas de orçamento
 app.use('/api/ratings', require('./src/routes/ratings'));
 app.use('/api/achievements', require('./src/routes/achievements'));
 app.use('/api/explore', require('./src/routes/explore'));
 app.use('/api/ai', require('./src/routes/ai'));
-app.use('/api/upload', require('./src/routes/upload'));
+app.use('/api/notifications', require('./src/routes/notifications'));
+app.use('/api/social', require('./src/routes/social'));
+app.use('/api/recommendations', require('./src/routes/recommendations'));
+app.use('/api/chat', require('./src/routes/chat'));
+app.use('/api/push', require('./src/routes/pushNotifications'));
 
-// Rota pública de compartilhamento (sem auth)
-const shareController = require('./src/controllers/shareController');
-app.get('/api/shared/:shareId', shareController.getSharedItinerary);
+// Rota de teste (apenas em ambiente de teste ou TEST_MODE ativado)
+if (process.env.NODE_ENV !== 'production' || process.env.TEST_MODE === 'true') {
+  app.use('/api/test', require('./src/routes/test'));
+}
+app.use('/api/upload', require('./src/routes/upload'));
 
 // 404
 app.use((req, res) => {
@@ -141,8 +165,26 @@ app.use((req, res) => {
 // Error handler global
 app.use(require('./src/middleware/errorHandler'));
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Guia do Aventureiro API rodando na porta ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-});
+// Exportar app para testes
+module.exports = app;
+
+// Iniciar servidor apenas se não for importado
+if (require.main === module) {
+  const http = require('http');
+  const { initializeSocket } = require('./src/services/socketService');
+  const { initializeScheduler } = require('./src/services/notificationScheduler');
+
+  const server = http.createServer(app);
+
+  // Inicializar Socket.IO
+  initializeSocket(server);
+
+  // Inicializar scheduler de notificações
+  initializeScheduler();
+
+  server.listen(PORT, () => {
+    console.log(`🚀 Guia do Aventureiro API rodando na porta ${PORT}`);
+    console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`⚡ WebSocket habilitado para colaboração em tempo real`);
+  });
+}

@@ -83,10 +83,97 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  hasCompletedOnboarding: {
+    type: Boolean,
+    default: false,
+  },
+  tooltipsShown: {
+    createItinerary: { type: Boolean, default: false },
+    useAI: { type: Boolean, default: false },
+    budget: { type: Boolean, default: false },
+    explore: { type: Boolean, default: false },
+    achievements: { type: Boolean, default: false },
+  },
   savedItineraries: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Itinerary',
   }],
+  subscription: {
+    plan: {
+      type: String,
+      enum: ['free', 'premium', 'pro'],
+      default: 'free',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'cancelled', 'past_due', 'trialing'],
+      default: 'active',
+    },
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
+    cancelAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+    trialEndsAt: {
+      type: Date,
+      default: null,
+    },
+    currentPeriodStart: {
+      type: Date,
+      default: null,
+    },
+    currentPeriodEnd: {
+      type: Date,
+      default: null,
+    },
+    billingCycle: {
+      type: String,
+      enum: ['monthly', 'annual'],
+      default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+    },
+    stripeSubscriptionId: {
+      type: String,
+      default: null,
+    },
+    usage: {
+      itineraries: {
+        current: { type: Number, default: 0 },
+        limit: { type: Number, default: 3 },
+        unlimited: { type: Boolean, default: false },
+      },
+      aiGenerations: {
+        current: { type: Number, default: 0 },
+        limit: { type: Number, default: 2 },
+        unlimited: { type: Boolean, default: false },
+        resetDate: { type: Date, default: null },
+      },
+      photos: {
+        current: { type: Number, default: 0 },
+        limit: { type: Number, default: 10 },
+        unlimited: { type: Boolean, default: false },
+      },
+      collaborators: {
+        current: { type: Number, default: 0 },
+        limit: { type: Number, default: 0 },
+        unlimited: { type: Boolean, default: false },
+      },
+    },
+  },
 }, {
   timestamps: true,
 });

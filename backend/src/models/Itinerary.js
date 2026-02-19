@@ -92,7 +92,6 @@ const itinerarySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    index: true,
   },
   title: {
     type: String,
@@ -208,10 +207,6 @@ const itinerarySchema = new mongoose.Schema({
     enum: ['rascunho', 'planejando', 'confirmado', 'em_andamento', 'concluido'],
     default: 'rascunho',
   },
-  isPublic: {
-    type: Boolean,
-    default: false,
-  },
   generatedByAI: {
     type: Boolean,
     default: false,
@@ -256,6 +251,28 @@ const itinerarySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  shareCount: {
+    type: Number,
+    default: 0,
+  },
+  copyCount: {
+    type: Number,
+    default: 0,
+  },
+  shareHistory: [{
+    platform: {
+      type: String,
+      enum: ['facebook', 'twitter', 'instagram', 'whatsapp', 'telegram', 'linkedin', 'pinterest', 'email', 'other'],
+    },
+    sharedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    sharedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
   lastEditedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -16,26 +16,46 @@ const ATTEMPT_WINDOW = 15 * 60 * 1000; // Janela de 15 minutos para contar tenta
 
 /**
  * Limpa tentativas antigas periodicamente
+ * Só inicia o intervalo em produção (não em testes)
  */
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, data] of failedAttempts.entries()) {
-    // Se passou o tempo de bloqueio, limpar
-    if (data.blockedUntil && now > data.blockedUntil) {
-      failedAttempts.delete(ip);
+let cleanupInterval;
+if (process.env.NODE_ENV !== 'test') {
+  cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [ip, data] of failedAttempts.entries()) {
+      // Se passou o tempo de bloqueio, limpar
+      if (data.blockedUntil && now > data.blockedUntil) {
+        failedAttempts.delete(ip);
+      }
+      // Se passou a janela de tentativas, limpar
+      else if (!data.blockedUntil && now - data.firstAttempt > ATTEMPT_WINDOW) {
+        failedAttempts.delete(ip);
+      }
     }
-    // Se passou a janela de tentativas, limpar
-    else if (!data.blockedUntil && now - data.firstAttempt > ATTEMPT_WINDOW) {
-      failedAttempts.delete(ip);
-    }
+  }, 60 * 1000); // Limpar a cada 1 minuto
+}
+
+/**
+ * Função para limpar o intervalo (útil para testes)
+ */
+const cleanup = () => {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
   }
-}, 60 * 1000); // Limpar a cada 1 minuto
+  failedAttempts.clear();
+};
 
 /**
  * Middleware para verificar se IP está bloqueado
  */
 const checkBlocked = (req, res, next) => {
   const ip = req.ip || req.connection.remoteAddress;
+  
+  // Ignorar completamente em modo de teste
+  if (process.env.TEST_MODE === 'true') {
+    return next();
+  }
+  
   const attemptData = failedAttempts.get(ip);
   
   if (attemptData && attemptData.blockedUntil) {
@@ -129,9 +149,18 @@ const getBlockedIPs = () => {
   return blocked;
 };
 
+/**
+ * Limpar bloqueios (apenas para testes)
+ */
+const clearBlocks = () => {
+  failedAttempts.clear();
+};
+
 module.exports = {
   checkBlocked,
   recordFailedAttempt,
   clearFailedAttempts,
   getBlockedIPs,
+  clearBlocks,
+  cleanup,
 };

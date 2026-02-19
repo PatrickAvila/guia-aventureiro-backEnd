@@ -17,13 +17,14 @@ exports.createOrUpdateRating = async (req, res, next) => {
       return res.status(404).json({ message: 'Roteiro não encontrado' });
     }
 
-    // Verificar se o usuário é dono ou colaborador do roteiro
+    // Verificar se o usuário é dono ou colaborador do roteiro OU se o roteiro é público
     const isOwner = itinerary.owner.toString() === userId;
     const isCollaborator = itinerary.collaborators && itinerary.collaborators.some(
       collab => collab.user.toString() === userId
     );
+    const isPublic = itinerary.isPublic;
 
-    if (!isOwner && !isCollaborator) {
+    if (!isOwner && !isCollaborator && !isPublic) {
       return res.status(403).json({ 
         message: 'Você precisa ter participado deste roteiro para avaliá-lo' 
       });

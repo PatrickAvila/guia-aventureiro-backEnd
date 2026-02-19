@@ -16,12 +16,21 @@ exports.addExpense = async (req, res, next) => {
     }
 
     // Verificar se é dono ou colaborador com permissão de edição
-    const isOwner = itinerary.owner.toString() === userId.toString();
+    const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
     const canEdit = itinerary.collaborators && itinerary.collaborators.some(
       collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
     );
+    
+    console.log('🔐 Verificação de permissão:', {
+      owner: itinerary.owner,
+      userId,
+      isOwner,
+      canEdit,
+      isPublic: itinerary.isPublic
+    });
 
-    if (!isOwner && !canEdit) {
+    // Permitir editar se: é owner, colaborador com permissão, OU roteiro público
+    if (!isOwner && !canEdit && !itinerary.isPublic) {
       return res.status(403).json({ message: 'Você não tem permissão para adicionar gastos' });
     }
 
@@ -81,12 +90,13 @@ exports.updateExpense = async (req, res, next) => {
     }
 
     // Verificar permissão
-    const isOwner = itinerary.owner.toString() === userId.toString();
+    const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
     const canEdit = itinerary.collaborators && itinerary.collaborators.some(
       collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
     );
 
-    if (!isOwner && !canEdit) {
+    // Permitir editar se: é owner, colaborador com permissão, OU roteiro público
+    if (!isOwner && !canEdit && !itinerary.isPublic) {
       return res.status(403).json({ message: 'Você não tem permissão para editar gastos' });
     }
 
@@ -144,12 +154,13 @@ exports.deleteExpense = async (req, res, next) => {
     }
 
     // Verificar permissão
-    const isOwner = itinerary.owner.toString() === userId.toString();
+    const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
     const canEdit = itinerary.collaborators && itinerary.collaborators.some(
       collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
     );
 
-    if (!isOwner && !canEdit) {
+    // Permitir deletar se: é owner, colaborador com permissão, OU roteiro público
+    if (!isOwner && !canEdit && !itinerary.isPublic) {
       return res.status(403).json({ message: 'Você não tem permissão para deletar gastos' });
     }
 
@@ -200,7 +211,7 @@ exports.getBudgetSummary = async (req, res, next) => {
     }
 
     // Verificar se tem acesso
-    const isOwner = itinerary.owner.toString() === userId.toString();
+    const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
     const isCollaborator = itinerary.collaborators && itinerary.collaborators.some(
       collab => collab.user.toString() === userId.toString()
     );

@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // 5 tentativas por janela
+  max: process.env.NODE_ENV === 'test' ? 10000 : 5, // 10000 em testes, 5 em produção
   message: {
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
   },
@@ -15,6 +15,14 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   // Usar IP real quando atrás de proxy (ex: nginx, cloudflare)
   skipSuccessfulRequests: false,
+  // Ignorar completamente em modo de teste
+  skip: (req) => {
+    if (process.env.TEST_MODE === 'true') {
+      return true;
+    }
+    const ip = req.ip || req.connection.remoteAddress;
+    return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  },
 });
 
 /**
@@ -28,6 +36,7 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => process.env.TEST_MODE === 'true',
 });
 
 /**
@@ -42,6 +51,7 @@ const aiGenerationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => process.env.TEST_MODE === 'true',
 });
 
 module.exports = {

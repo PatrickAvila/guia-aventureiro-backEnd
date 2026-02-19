@@ -12,6 +12,7 @@ router.post('/:itineraryId', auth, validateCreateRating, ratingController.create
 
 // Obter todas as avaliações de um roteiro
 router.get('/:itineraryId/all', ratingController.getRatingsByItinerary);
+router.get('/:itineraryId', ratingController.getRatingsByItinerary); // Alias sem /all
 
 // Obter avaliação do usuário para um roteiro específico
 router.get('/:itineraryId/my-rating', auth, ratingController.getUserRating);

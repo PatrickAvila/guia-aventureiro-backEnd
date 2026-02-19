@@ -3,6 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const auth = require('../middleware/auth');
+const { canUploadPhoto, incrementUsage } = require('../middleware/checkLimits');
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ const upload = multer({
  * @desc    Upload de foto para Cloudinary
  * @access  Private
  */
-router.post('/', auth, upload.single('photo'), async (req, res) => {
+router.post('/', auth, canUploadPhoto, upload.single('photo'), async (req, res) => {
   try {
     console.log('📥 Recebendo upload...');
     console.log('📥 Headers:', req.headers['content-type']);
@@ -62,6 +63,12 @@ router.post('/', auth, upload.single('photo'), async (req, res) => {
 
     console.log('✅ Upload concluído:', result.secure_url);
 
+    // Incrementar contador de fotos
+    if (req.subscription) {
+      req.subscription.incrementUsage('photos');
+      await req.subscription.save();
+    }
+
     res.status(200).json({
       url: result.secure_url,
       publicId: result.public_id,
@@ -78,7 +85,7 @@ router.post('/', auth, upload.single('photo'), async (req, res) => {
  * @desc    Upload de múltiplas fotos
  * @access  Private
  */
-router.post('/multiple', auth, upload.array('photos', 10), async (req, res) => {
+router.post('/multiple', auth, canUploadPhoto, upload.array('photos', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'Nenhuma foto foi enviada' });

@@ -1,5 +1,6 @@
 // backend/src/controllers/authController.js
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
 const jwt = require('jsonwebtoken');
 const { recordFailedAttempt, clearFailedAttempts } = require('../middleware/ipBlocker');
 
@@ -59,6 +60,9 @@ exports.signup = async (req, res) => {
       acceptedTerms 
     });
     await user.save();
+
+    // Criar subscription gratuita para o novo usuário
+    await Subscription.createFreeSubscription(user._id);
 
     // Gerar tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
@@ -179,7 +183,7 @@ exports.logout = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
-    res.json(user);
+    res.json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar perfil.', error: error.message });
   }
@@ -188,7 +192,12 @@ exports.getProfile = async (req, res) => {
 // Update profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, avatar, preferences, publicProfile } = req.body;
+    const { name, avatar, preferences, publicProfile, hasCompletedOnboarding, tooltipsShown } = req.body;
+
+    // Validar nome vazio
+    if (name !== undefined && name.trim() === '') {
+      return res.status(400).json({ message: 'Nome não pode ser vazio.' });
+    }
 
     const user = await User.findById(req.userId);
 
@@ -196,6 +205,8 @@ exports.updateProfile = async (req, res) => {
     if (avatar !== undefined) user.avatar = avatar;
     if (preferences) user.preferences = { ...user.preferences, ...preferences };
     if (publicProfile !== undefined) user.publicProfile = publicProfile;
+    if (hasCompletedOnboarding !== undefined) user.hasCompletedOnboarding = hasCompletedOnboarding;
+    if (tooltipsShown !== undefined) user.tooltipsShown = tooltipsShown;
 
     await user.save();
 

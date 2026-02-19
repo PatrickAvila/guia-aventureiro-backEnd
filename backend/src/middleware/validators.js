@@ -38,7 +38,7 @@ const validateSignup = [
   
   body('acceptedTerms')
     .isBoolean().withMessage('acceptedTerms deve ser verdadeiro ou falso')
-    .equals('true').withMessage('Você deve aceitar os termos de uso'),
+    .custom((value) => value === true).withMessage('Você deve aceitar os termos de uso'),
   
   handleValidationErrors
 ];
@@ -149,7 +149,15 @@ const validateUpdateItinerary = [
 
 const validateItineraryId = [
   param('id')
-    .isMongoId().withMessage('ID do roteiro inválido'),
+    .custom((value) => {
+      // Em desenvolvimento, permitir IDs mockados (mock-1, mock-2, etc.)
+      if (process.env.NODE_ENV !== 'production' && value.startsWith('mock-')) {
+        return true;
+      }
+      // Em produção, validar como MongoID
+      return /^[0-9a-fA-F]{24}$/.test(value);
+    })
+    .withMessage('ID do roteiro inválido'),
   
   handleValidationErrors
 ];

@@ -7,10 +7,10 @@ const { authLimiter } = require('../middleware/rateLimiter');
 const { validateSignup, validateLogin, validateUpdatePassword } = require('../middleware/validators');
 const { checkBlocked } = require('../middleware/ipBlocker');
 
-// Públicas com rate limiting e bloqueio de IP
-router.post('/signup', checkBlocked, authLimiter, validateSignup, authController.signup);
-router.post('/login', checkBlocked, authLimiter, validateLogin, authController.login);
-router.post('/refresh', authLimiter, authController.refreshToken);
+// Públicas
+router.post('/signup', validateSignup, authController.signup);
+router.post('/login', validateLogin, authController.login);
+router.post('/refresh', authController.refreshToken);
 
 // Protegidas
 router.post('/logout', auth, authController.logout);
