@@ -67,7 +67,26 @@ app.use(cors({
   credentials: true,
 }));
 
-// Body parser
+// ========================================
+// STRIPE WEBHOOK (ANTES DO BODY PARSER)
+// ========================================
+// O webhook Stripe precisa do raw body para verificar a assinatura
+const verifyStripeSignature = require('./src/middleware/verifyStripeSignature');
+const subscriptionController = require('./src/controllers/subscriptionController');
+
+app.post(
+  '/api/subscriptions/webhook',
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => {
+    // Armazenar raw body para verificação de assinatura
+    req.rawBody = req.body;
+    next();
+  },
+  verifyStripeSignature,
+  subscriptionController.handleWebhook
+);
+
+// Body parser (DEPOIS do webhook)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -132,12 +151,20 @@ app.get('/health', async (req, res) => {
   res.status(healthcheck.status === 'OK' ? 200 : 503).json(healthcheck);
 });
 
-// Rota pública para visualizar roteiros compartilhados (sem autenticação)
+// Rotas públicas para roteiros compartilhados
 const shareController = require('./src/controllers/shareController');
+const authMiddleware = require('./src/middleware/auth');
+const { canCreateItinerary } = require('./src/middleware/checkLimits');
+
+// GET público (sem autenticação)
 app.get('/api/shared/:shareId', shareController.getSharedItinerary);
+
+// POST para copiar (requer autenticação + verificação de limites)
+app.post('/api/shared/:shareId/copy', authMiddleware, canCreateItinerary, shareController.copySharedItinerary);
 
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/subscriptions', require('./src/routes/subscriptions')); // Sistema de assinatura
+app.use('/api/checkout', require('./src/routes/checkout')); // Stripe Checkout (Webview)
 app.use('/api/roteiros', require('./src/routes/maps')); // Rotas de mapa (antes de itineraries para evitar conflito)
 app.use('/api/roteiros', require('./src/routes/itineraries'));
 app.use('/api/roteiros', require('./src/routes/budget')); // Rotas de orçamento

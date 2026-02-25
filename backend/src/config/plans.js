@@ -2,6 +2,7 @@
 
 /**
  * Definição dos Planos de Assinatura
+ * Estratégia de lançamento: 2 planos para simplificar decisão de compra
  */
 
 const PLANS = {
@@ -14,27 +15,27 @@ const PLANS = {
       currency: 'BRL'
     },
     limits: {
-      itineraries: 3,
-      aiGenerations: 3, // por mês (igualado com roteiros)
+      itineraries: 5, // 5 roteiros ativos (↑ de 3)
+      aiGenerations: 15, // 15 criações/mês: manual + duplicação + IA (↑ de 10)
       photos: 0, // sem upload de fotos
       collaborators: 0,
       storageGB: 0,
     },
     features: {
       createItineraries: true,
-      aiGeneration: true, // limitado a 3/mês
+      aiGeneration: true,
       publicSharing: false, // apenas perfil público, roteiros privados
       photoUpload: false,
       offlineMode: false,
       exportPDF: false,
       prioritySupport: false,
-      removeAds: false, // terá anúncios quando lançar
+      removeAds: false,
       earlyAccess: false,
     },
     description: 'Perfeito para começar a planejar suas viagens',
     highlights: [
-      'Até 3 roteiros por mês',
-      'Geração com IA',
+      'Até 5 roteiros ativos',
+      '15 criações de roteiros por mês',
       'Roteiros privados',
     ],
     cta: 'Comece Grátis',
@@ -53,9 +54,9 @@ const PLANS = {
       yearly: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
     },
     limits: {
-      itineraries: 50,
-      aiGenerations: 50, // igualado com roteiros
-      photos: 20, // por roteiro
+      itineraries: 50, // 50 roteiros ativos
+      aiGenerations: 999999, // criações ilimitadas
+      photos: 20, // 20 fotos por roteiro (suficiente para 95% dos casos)
       collaborators: 0,
       storageGB: 0,
     },
@@ -70,10 +71,10 @@ const PLANS = {
       removeAds: true,
       earlyAccess: false,
     },
-    description: 'Ideal para viajantes frequentes',
+    description: 'Tudo que você precisa para planejar viagens incríveis',
     highlights: [
-      'Até 50 roteiros por mês',
-      'Compartilhar roteiros',
+      'Até 50 roteiros ativos',
+      'Criações ilimitadas de roteiros',
       'Upload de fotos (20 por roteiro)',
       'Modo offline',
       'Exportar PDF',
@@ -81,51 +82,6 @@ const PLANS = {
     ],
     cta: 'Assinar Premium',
     popular: true, // Badge de "Mais Popular"
-  },
-  
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    price: {
-      monthly: 49.90,
-      yearly: 499.00, // ~41.58/mês (economia de 17%)
-      currency: 'BRL'
-    },
-    stripePriceIds: {
-      monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
-      yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID,
-    },
-    limits: {
-      itineraries: 999999, // ilimitado
-      aiGenerations: 999999, // ilimitado
-      photos: 50, // por roteiro
-      collaborators: 0,
-      storageGB: 0,
-    },
-    features: {
-      createItineraries: true,
-      aiGeneration: true,
-      publicSharing: true,
-      photoUpload: true,
-      offlineMode: true,
-      exportPDF: true,
-      prioritySupport: true, // exclusivo Pro
-      removeAds: true,
-      earlyAccess: true, // novidades antes de todos
-    },
-    description: 'Para viajantes profissionais',
-    highlights: [
-      'Roteiros ilimitados',
-      'Compartilhar roteiros',
-      'Upload de fotos (50 por roteiro)',
-      'Modo offline',
-      'Exportar PDF',
-      'Suporte prioritário',
-      'Acesso antecipado a novidades',
-      'Sem anúncios',
-    ],
-    cta: 'Assinar Pro',
-    enterprise: true,
   },
 };
 
@@ -147,7 +103,7 @@ const isValidPlan = (planId) => {
  * Comparar planos (retorna true se plan1 é superior a plan2)
  */
 const isPlanSuperior = (plan1, plan2) => {
-  const hierarchy = { free: 0, premium: 1, pro: 2 };
+  const hierarchy = { free: 0, premium: 1 };
   return hierarchy[plan1] > hierarchy[plan2];
 };
 
@@ -156,7 +112,7 @@ const isPlanSuperior = (plan1, plan2) => {
  */
 const getYearlySavings = (planId) => {
   const plan = PLANS[planId];
-  if (!plan || plan.id === 'free') return null; // Retorna null ao invés de 0
+  if (!plan || plan.id === 'free') return null;
   
   const monthlyTotal = plan.price.monthly * 12;
   const yearlyTotal = plan.price.yearly;

@@ -14,79 +14,100 @@ Roteiros de viagem com IA
 
 ### Descrição Curta (Promotional Text - 170 caracteres)
 ```
-Crie roteiros de viagem personalizados em segundos com Inteligência Artificial. Gerencie orçamento, salve fotos e explore destinos incríveis! 🌍✈️
+Roteiros personalizados com IA, chat colaborativo, mapas, orçamento e muito mais! Transforme suas viagens com tecnologia. 🌍✈️
 ```
 
 ### Descrição Completa (4000 caracteres max)
 ```
 🌍 PLANEJE SUA PRÓXIMA AVENTURA COM IA
 
-O Guia do Aventureiro é seu assistente pessoal de viagem! Crie roteiros detalhados em segundos usando Inteligência Artificial, gerencie orçamentos e guarde todas as memórias da sua jornada.
+O Guia do Aventureiro é seu assistente pessoal de viagem completo! Crie roteiros detalhados com Inteligência Artificial, gerencie orçamentos, colabore com amigos em tempo real e muito mais.
 
 ✨ RECURSOS PRINCIPAIS
 
-🤖 ROTEIROS INTELIGENTES
-• Geração automática de roteiros com IA (Groq LLaMA)
+🤖 ROTEIROS INTELIGENTES COM IA
+• Geração automática de roteiros com IA (Groq LLaMA 3.3)
 • Personalização por preferências (aventura, gastronomia, cultura, etc)
 • Sugestões de pontos turísticos, restaurantes e atividades
-• Dia a dia detalhado com horários e dicas
+• Cronograma dia a dia detalhado com horários e dicas
+• Recomendações personalizadas baseadas no seu histórico
 
-💰 CONTROLE DE ORÇAMENTO
+💬 CHAT COLABORATIVO EM TEMPO REAL
+• Planeje viagens em grupo com chat integrado
+• Discuta mudanças no roteiro com colaboradores
+• Notificações em tempo real de novas mensagens
+• Compartilhe ideias e tome decisões em conjunto
+
+🗺️ MAPAS INTERATIVOS
+• Visualize todos os pontos do roteiro no mapa
+• Navegação integrada entre locais
+• Coordenadas precisas de cada atividade
+• Planejamento visual da sua rota
+
+💰 CONTROLE TOTAL DE ORÇAMENTO
 • Defina limite de gastos antes de criar o roteiro
-• Acompanhe despesas reais durante a viagem
-• Categorias: transporte, hospedagem, alimentação, passeios
-• Alertas quando ultrapassar o orçamento
+• Acompanhe despesas reais por categoria
+• Gráficos e estatísticas de gastos
+• Alertas quando ultrapassar o orçamento planejado
+• Categorias: hospedagem, alimentação, transporte, atrações
 
 📸 MEMÓRIAS ETERNIZADAS
 • Adicione fotos aos seus roteiros
 • Organize imagens por destino e data
-• Reviva suas aventuras a qualquer momento
+• Upload otimizado com compressão automática
 • Compartilhe experiências com amigos
 
-🗺️ EXPLORE O MUNDO
+🗺️ EXPLORE E COMPARTILHE
 • Descubra roteiros criados por outros viajantes
 • Filtros por destino, duração e orçamento
 • Avalie e salve seus roteiros favoritos
+• Compartilhe seus roteiros via link público
 • Inspire-se para sua próxima viagem
 
-🏆 CONQUISTAS E BADGES
-• Desbloqueie medalhas conforme viaja
-• Acompanhe estatísticas: países visitados, km percorridos
-• Gamificação que torna viajar ainda mais divertido
+🏆 GAMIFICAÇÃO E CONQUISTAS
+• Desbloqueie 20+ badges diferentes
+• Acompanhe estatísticas: países visitados, XP, nível
+• Sistema de conquistas automático
+• Torna viajar ainda mais divertido
 
-🌓 MODO ESCURO
-• Interface moderna e elegante
-• Alternância entre tema claro e escuro
-• Economia de bateria no modo escuro
+💎 PLANOS FLEXÍVEIS
+• FREE: 5 roteiros, 10 AI requests, 5 fotos
+• PREMIUM: 20 roteiros, 50 AI requests, 20 fotos (R$ 9,90/mês)
+• PRO: Tudo ilimitado (R$ 19,90/mês)
+• Comece grátis e faça upgrade quando precisar!
+
+🔔 NOTIFICAÇÕES INTELIGENTES
+• Lembretes de viagens próximas
+• Dicas 3 dias antes da viagem
+• Alertas de limites de uso
+• Notificações de colaboradores
+
+🌓 INTERFACE MODERNA
+• Tema claro e escuro
+• Design clean e intuitivo
+• Navegação rápida
+• Tutorial interativo
+• Otimizado para iOS e Android
+
+🌐 MODO OFFLINE
+• Acesse roteiros salvos sem internet
+• Sincronização automática
+• Dados sempre disponíveis
 
 🔒 PRIVACIDADE E SEGURANÇA
-• Seus dados são protegidos com criptografia
-• Controle total: escolha o que é público ou privado
-• Exclua sua conta e dados a qualquer momento
-
-📱 INTERFACE INTUITIVA
-• Design clean e fácil de usar
-• Navegação rápida entre telas
-• Otimizado para iOS e iPhone
-
-🌐 FUNCIONA OFFLINE
-• Acesse roteiros salvos sem internet
-• Sincronização automática ao conectar
+• Dados criptografados
+• Controle total de privacidade
+• Exclua seus dados quando quiser
 
 💡 IDEAL PARA
-• Viajantes que querem economizar tempo no planejamento
+• Viajantes que querem economizar tempo
 • Aventureiros buscando inspiração
-• Famílias organizando férias
+• Famílias planejando férias
 • Mochileiros explorando o mundo
-• Casais planejando lua de mel
+• Casais em lua de mel
+• Grupos de amigos viajando juntos
 
-🎯 PRÓXIMOS RECURSOS
-• Reservas de hotéis e voos integrados
-• Mapas offline com rotas
-• Tradutor integrado
-• Comunidade de viajantes
-
-BAIXE AGORA e transforme suas viagens com o poder da Inteligência Artificial! 🚀
+BAIXE AGORA e transforme suas viagens! 🚀
 
 ---
 

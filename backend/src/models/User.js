@@ -101,7 +101,7 @@ const userSchema = new mongoose.Schema({
   subscription: {
     plan: {
       type: String,
-      enum: ['free', 'premium', 'pro'],
+      enum: ['free', 'premium'],
       default: 'free',
     },
     status: {
@@ -177,6 +177,48 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+// DESABILITADO: Cascade delete pode causar loop
+// Cascade delete: remover dados relacionados quando usuário for deletado
+// Para document.deleteOne()
+// userSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+//   try {
+//     console.log(`🗑️ Deletando dados relacionados ao usuário ${this.email}...`);
+// 
+//     // Deletar todos os roteiros do usuário
+//     try {
+//       const Itinerary = mongoose.model('Itinerary');
+//       const itinerariesResult = await Itinerary.deleteMany({ owner: this._id });
+//       console.log(`   - ${itinerariesResult.deletedCount} roteiros deletados`);
+//     } catch (err) {
+//       if (err.name !== 'MissingSchemaError') throw err;
+//     }
+//     
+//     // Deletar todas as conquistas do usuário
+//     try {
+//       const Achievement = mongoose.model('Achievement');
+//       const achievementsResult = await Achievement.deleteMany({ user: this._id });
+//       console.log(`   - ${achievementsResult.deletedCount} conquistas deletadas`);
+//     } catch (err) {
+//       if (err.name !== 'MissingSchemaError') throw err;
+//     }
+//     
+//     // Deletar assinatura do usuário
+//     try {
+//       const Subscription = mongoose.model('Subscription');
+//       const subscriptionResult = await Subscription.deleteOne({ user: this._id });
+//       console.log(`   - ${subscriptionResult.deletedCount} assinatura deletada`);
+//     } catch (err) {
+//       if (err.name !== 'MissingSchemaError') throw err;
+//     }
+// 
+//     console.log(`✅ Dados relacionados ao usuário ${this.email} foram removidos`);
+//     next();
+//   } catch (error) {
+//     console.error('Erro ao deletar dados relacionados:', error);
+//     next(error);
+//   }
+// });
 
 // Hash password antes de salvar
 userSchema.pre('save', async function(next) {

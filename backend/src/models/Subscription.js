@@ -10,7 +10,7 @@ const subscriptionSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['free', 'premium', 'pro'],
+    enum: ['free', 'premium'],
     default: 'free',
     required: true,
   },
@@ -24,6 +24,17 @@ const subscriptionSchema = new mongoose.Schema({
   },
   stripeSubscriptionId: {
     type: String,
+  },
+  stripePriceId: {
+    type: String,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'active', 'canceled', 'past_due', 'incomplete'],
+    default: 'pending',
+  },
+  renewsAt: {
+    type: Date,
   },
   startDate: {
     type: Date,
@@ -58,25 +69,20 @@ const subscriptionSchema = new mongoose.Schema({
   usage: {
     itineraries: {
       current: { type: Number, default: 0 }, // roteiros ativos (slots)
-      limit: { type: Number, default: 3 }, // Free: 3, Premium: 50, Pro: ilimitado
-    },
-    monthlyCreations: {
-      count: { type: Number, default: 0 }, // criações neste mês
-      limit: { type: Number, default: 10 }, // Free: 10/mês, Premium: ilimitado
-      lastReset: { type: Date, default: Date.now },
+      limit: { type: Number, default: 5 }, // Free: 5, Premium: 50
     },
     aiGenerations: {
       current: { type: Number, default: 0 },
-      limit: { type: Number, default: 3 }, // Free: 3/mês, Premium: 50/mês, Pro: ilimitado
+      limit: { type: Number, default: 15 }, // Free: 15/mês, Premium: ilimitado
       lastReset: { type: Date, default: Date.now },
     },
     photos: {
       current: { type: Number, default: 0 },
-      limit: { type: Number, default: 10 }, // Free: 10 total, Premium: 100, Pro: 500
+      limit: { type: Number, default: 0 }, // Free: 0 (sem upload), Premium: 20/roteiro
     },
     collaborators: {
       current: { type: Number, default: 0 },
-      limit: { type: Number, default: 0 }, // Free: 0, Premium: 5/roteiro, Pro: ilimitado
+      limit: { type: Number, default: 0 }, // Free: 0, Premium: 0 (futuro)
     },
   },
   // Recursos desbloqueados
@@ -149,8 +155,6 @@ subscriptionSchema.methods.canCreateItinerary = function() {
 };
 
 subscriptionSchema.methods.canUseAI = function() {
-  if (this.plan === 'pro') return true;
-  
   // Resetar contador mensal se necessário
   const now = new Date();
   const lastReset = new Date(this.usage.aiGenerations.lastReset);
@@ -170,31 +174,13 @@ subscriptionSchema.methods.canUploadPhoto = function() {
   return this.usage.photos.current < this.usage.photos.limit;
 };
 
-subscriptionSchema.methods.canCreateThisMonth = function() {
-  // Pro e Premium têm criações ilimitadas
-  if (this.plan !== 'free') return true;
-  
-  // Resetar contador mensal se necessário
-  const now = new Date();
-  const lastReset = new Date(this.usage.monthlyCreations.lastReset);
-  const monthsDiff = (now.getFullYear() - lastReset.getFullYear()) * 12 + 
-                     (now.getMonth() - lastReset.getMonth());
-  
-  if (monthsDiff > 0) {
-    this.usage.monthlyCreations.count = 0;
-    this.usage.monthlyCreations.lastReset = now;
-    this.usage.aiGenerations.current = 0;
-    this.usage.aiGenerations.lastReset = now;
-  }
-  
-  return this.usage.monthlyCreations.count < this.usage.monthlyCreations.limit;
-};
-
 subscriptionSchema.methods.incrementUsage = function(type) {
-  if (type === 'monthlyCreations') {
-    this.usage.monthlyCreations.count += 1;
-  } else if (this.usage[type]) {
+  console.log(`🔼 incrementUsage chamado para tipo: ${type}`);
+  if (this.usage[type]) {
+    const oldValue = this.usage[type].current;
     this.usage[type].current += 1;
+    this.markModified(`usage.${type}`);
+    console.log(`   ${type}.current: ${oldValue} → ${this.usage[type].current}`);
   }
 };
 
@@ -222,11 +208,10 @@ subscriptionSchema.methods.upgrade = function(newPlan) {
 subscriptionSchema.methods.updateLimitsForPlan = function(plan) {
   const limits = {
     free: {
-      itineraries: 3,
-      aiGenerations: 2,
-      photos: 10,
+      itineraries: 5, // 5 roteiros ativos (slots)
+      aiGenerations: 15, // 15 criações mensais (manual, duplicação, IA)
+      photos: 0, // SEM upload de fotos no plano free
       collaborators: 0,
-      monthlyCreations: 10, // Limite de criações mensais
       features: {
         offlineMode: false,
         prioritySupport: false,
@@ -237,11 +222,10 @@ subscriptionSchema.methods.updateLimitsForPlan = function(plan) {
       }
     },
     premium: {
-      itineraries: 50,
-      aiGenerations: 20,
-      photos: 100,
-      collaborators: 5,
-      monthlyCreations: 999999, // Criações ilimitadas
+      itineraries: 50, // 50 roteiros ativos (slots)
+      aiGenerations: 999999, // Criações ilimitadas
+      photos: 20, // 20 fotos por roteiro
+      collaborators: 0,
       features: {
         offlineMode: true,
         prioritySupport: true,
@@ -249,21 +233,6 @@ subscriptionSchema.methods.updateLimitsForPlan = function(plan) {
         customBranding: false,
         exportPDF: true,
         apiAccess: false,
-      }
-    },
-    pro: {
-      itineraries: 999999,
-      aiGenerations: 999999,
-      photos: 500,
-      collaborators: 999999,
-      monthlyCreations: 999999, // Criações ilimitadas
-      features: {
-        offlineMode: true,
-        prioritySupport: true,
-        advancedAnalytics: true,
-        customBranding: true,
-        exportPDF: true,
-        apiAccess: true,
       }
     }
   };
@@ -274,7 +243,6 @@ subscriptionSchema.methods.updateLimitsForPlan = function(plan) {
     this.usage.aiGenerations.limit = planLimits.aiGenerations;
     this.usage.photos.limit = planLimits.photos;
     this.usage.collaborators.limit = planLimits.collaborators;
-    this.usage.monthlyCreations.limit = planLimits.monthlyCreations;
     this.features = planLimits.features;
   }
 };

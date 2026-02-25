@@ -42,7 +42,7 @@ exports.generateShareLink = async (req, res) => {
 
     res.status(200).json({
       shareLink: itinerary.publicLink,
-      fullUrl: `${req.protocol}://${req.get('host')}/shared/${itinerary.publicLink}`,
+      fullUrl: `https://landing-page-patrickavilas-projects.vercel.app/r/${itinerary.publicLink}`,
     });
   } catch (error) {
     logger.error('Erro ao gerar link:', error);
@@ -62,6 +62,11 @@ exports.copySharedItinerary = async (req, res, next) => {
       return res.status(404).json({ message: 'Roteiro não encontrado ou não está público' });
     }
 
+    // Não permitir copiar próprio roteiro
+    if (originalItinerary.owner.toString() === userId.toString()) {
+      return res.status(400).json({ message: 'Você não pode copiar seu próprio roteiro' });
+    }
+
     // Criar cópia do roteiro
     const copiedItinerary = new Itinerary({
       owner: userId,
@@ -70,15 +75,35 @@ exports.copySharedItinerary = async (req, res, next) => {
       startDate: originalItinerary.startDate,
       endDate: originalItinerary.endDate,
       duration: originalItinerary.duration,
-      budget: originalItinerary.budget,
+      budget: {
+        total: originalItinerary.budget?.total || 0,
+        spent: 0,
+        remaining: originalItinerary.budget?.total || 0,
+        expenses: [], // Lista vazia
+      },
       preferences: originalItinerary.preferences,
-      days: originalItinerary.days,
+      days: originalItinerary.days.map(day => ({
+        ...day,
+        activities: day.activities?.map(activity => ({
+          ...activity,
+          completed: false, // Resetar status
+        })) || [],
+      })),
       status: 'rascunho',
       isPublic: false,
       generatedByAI: false,
     });
 
     await copiedItinerary.save();
+
+    // Incrementar contadores de uso (conta como criação)
+    const Subscription = require('../models/Subscription');
+    const subscription = await Subscription.findOne({ userId });
+    
+    if (subscription) {
+      await subscription.incrementUsage('itineraries');
+      await subscription.incrementUsage('aiGenerations');
+    }
 
     logger.log('Roteiro copiado:', copiedItinerary._id);
 

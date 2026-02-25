@@ -1,7 +1,7 @@
 # 📡 API Documentation - Guia do Aventureiro
 
-**Versão:** 1.0.0  
-**Base URL:** `http://localhost:3000/api` (dev) | `https://api.guiaaventureiro.com/api` (prod)
+**Versão:** 1.0.6  
+**Base URL:** `http://localhost:3000/api` (dev) | `https://guia-aventureiro-backend.onrender.com/api` (prod)
 
 ---
 
@@ -657,6 +657,243 @@ photo: <arquivo>
 
 ---
 
+### **9. Subscription (`/api/subscriptions`)**
+
+#### **GET `/subscriptions/me`** 🔒 - Minha Assinatura
+Retorna dados da assinatura atual do usuário.
+
+**Response (200):**
+```json
+{
+  "plan": "premium",
+  "status": "active",
+  "limits": {
+    "maxItineraries": 20,
+    "maxAiRequests": 50,
+    "maxPhotos": 20
+  },
+  "usage": {
+    "itinerariesCount": 12,
+    "aiRequestsThisMonth": 23,
+    "photosUsed": 45
+  },
+  "billingDate": "2026-03-19T00:00:00.000Z",
+  "canUpgrade": true
+}
+```
+
+#### **GET `/subscriptions/plans`** - Listar Planos
+Lista todos os planos disponíveis.
+
+**Response (200):**
+```json
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "price": 0,
+      "limits": {
+        "maxItineraries": 5,
+        "maxAiRequests": 10,
+        "maxPhotos": 5
+      }
+    },
+    {
+      "id": "premium",
+      "name": "Premium",
+      "price": 9.90,
+      "limits": {
+        "maxItineraries": 20,
+        "maxAiRequests": 50,
+        "maxPhotos": 20
+      }
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "price": 19.90,
+      "limits": {
+        "maxItineraries": -1,
+        "maxAiRequests": -1,
+        "maxPhotos": -1
+      }
+    }
+  ]
+}
+```
+
+#### **POST `/subscriptions/upgrade`** 🔒 - Fazer Upgrade
+Faz upgrade do plano.
+
+**Request:**
+```json
+{
+  "plan": "premium",
+  "paymentMethod": "credit_card",
+  "paymentToken": "tok_visa_..."
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Upgrade realizado com sucesso",
+  "subscription": { ... }
+}
+```
+
+---
+
+### **10. Chat (`/api/chat`)**
+
+#### **GET `/chat/itinerary/:id/messages`** 🔒 - Mensagens do Roteiro
+Lista mensagens do chat do roteiro.
+
+**Response (200):**
+```json
+{
+  "messages": [
+    {
+      "_id": "...",
+      "user": {
+        "_id": "...",
+        "name": "João Silva"
+      },
+      "message": "Que tal mudarmos o horário?",
+      "createdAt": "2026-02-19T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+#### **POST `/chat/itinerary/:id/message`** 🔒 - Enviar Mensagem
+Envia mensagem no chat (Socket.io para real-time).
+
+**Request:**
+```json
+{
+  "message": "Concordo! Vamos almoçar mais tarde"
+}
+```
+
+---
+
+### **11. Mapas (`/api/maps`)**
+
+#### **GET `/maps/itinerary/:id`** 🔒 - Pontos do Roteiro no Mapa
+Retorna coordenadas de todos os pontos do roteiro.
+
+**Response (200):**
+```json
+{
+  "points": [
+    {
+      "day": 1,
+      "activity": "Visita ao Cristo Redentor",
+      "coordinates": {
+        "lat": -22.951916,
+        "lng": -43.210487
+      }
+    }
+  ]
+}
+```
+
+---
+
+### **12. Notificações (`/api/notifications`)**
+
+#### **GET `/notifications`** 🔒 - Listar Notificações
+Lista notificações do usuário.
+
+**Response (200):**
+```json
+{
+  "notifications": [
+    {
+      "_id": "...",
+      "title": "Viagem se aproxima!",
+      "message": "Sua viagem para Paris começa em 3 dias",
+      "type": "reminder",
+      "read": false,
+      "createdAt": "2026-02-19T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### **PUT `/notifications/:id/read`** 🔒 - Marcar como Lida
+Marca notificação como lida.
+
+---
+
+### **13. Recomendações (`/api/recommendations`)**
+
+#### **GET `/recommendations`** 🔒 - Recomendações Personalizadas
+Retorna roteiros recomendados baseados no perfil.
+
+**Response (200):**
+```json
+{
+  "recommendations": [
+    {
+      "_id": "...",
+      "destination": "Paris, França",
+      "reason": "Baseado nos seus roteiros culturais",
+      "score": 0.92
+    }
+  ]
+}
+```
+
+---
+
+### **14. Orçamento (`/api/budget`)**
+
+#### **GET `/budget/itinerary/:id`** 🔒 - Resumo do Orçamento
+Retorna resumo completo do orçamento do roteiro.
+
+**Response (200):**
+```json
+{
+  "estimated": 5000,
+  "spent": 2345.50,
+  "remaining": 2654.50,
+  "categories": {
+    "hospedagem": 1200,
+    "alimentacao": 680.50,
+    "transporte": 465
+  },
+  "expenses": [
+    {
+      "_id": "...",
+      "category": "hospedagem",
+      "description": "Hotel 3 noites",
+      "amount": 1200,
+      "date": "2026-02-15"
+    }
+  ]
+}
+```
+
+---
+
+### **15. Social (`/api/social`)**
+
+#### **POST `/social/share/:id`** 🔒 - Gerar Link de Compartilhamento
+Gera link público para compartilhar roteiro.
+
+**Response (200):**
+```json
+{
+  "shareUrl": "https://guiaaventureiro.com/shared/abc123def456",
+  "expiresAt": "2026-03-19T00:00:00.000Z"
+}
+```
+
+---
+
 ## 🔒 Segurança
 
 ### **Rate Limiting**
@@ -732,5 +969,7 @@ curl http://localhost:3000/api/itineraries \
 
 ---
 
-**📝 Atualizado:** 29/12/2025  
-**🔗 GitHub:** [github.com/seu-usuario/guia-aventureiro](https://github.com)
+**📝 Atualizado:** 19/02/2026  
+**📊 Versão da API:** 1.0.6  
+**🔗 GitHub Backend:** [github.com/PatrickAvila/guia-aventureiro-backEnd](https://github.com/PatrickAvila/guia-aventureiro-backEnd)  
+**🔗 GitHub Mobile:** [github.com/PatrickAvila/guia-aventureiro-mobile](https://github.com/PatrickAvila/guia-aventureiro-mobile)

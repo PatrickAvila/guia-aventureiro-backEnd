@@ -28,28 +28,17 @@ const upload = multer({
  * @route   POST /api/upload
  * @desc    Upload de foto para Cloudinary
  * @access  Private
+ * IMPORTANTE: upload.single() DEVE vir ANTES de canUploadPhoto para popular req.body
  */
-router.post('/', auth, canUploadPhoto, upload.single('photo'), async (req, res) => {
+router.post('/', auth, upload.single('photo'), canUploadPhoto, async (req, res) => {
   try {
-    console.log('📥 Recebendo upload...');
-    console.log('📥 Headers:', req.headers['content-type']);
-    console.log('📥 Body:', req.body);
-    console.log('📥 File:', req.file ? 'Arquivo presente' : 'Nenhum arquivo');
-    
     if (!req.file) {
-      console.log('❌ Nenhum arquivo recebido');
       return res.status(400).json({ message: 'Nenhuma foto foi enviada' });
     }
-
-    console.log('📥 Nome do arquivo:', req.file.originalname);
-    console.log('📥 Tipo:', req.file.mimetype);
-    console.log('📥 Tamanho:', req.file.size, 'bytes');
 
     // Converter buffer para base64
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-    console.log('☁️ Enviando para Cloudinary...');
     
     // Upload para Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
@@ -61,13 +50,23 @@ router.post('/', auth, canUploadPhoto, upload.single('photo'), async (req, res) 
       ],
     });
 
-    console.log('✅ Upload concluído:', result.secure_url);
-
-    // Incrementar contador de fotos
-    if (req.subscription) {
-      req.subscription.incrementUsage('photos');
-      await req.subscription.save();
+    // Se tem itineraryId, adicionar foto ao roteiro
+    if (req.itinerary) {
+      if (!req.itinerary.rating) {
+        req.itinerary.rating = {};
+      }
+      if (!req.itinerary.rating.photos) {
+        req.itinerary.rating.photos = [];
+      }
+      req.itinerary.rating.photos.push(result.secure_url);
+      await req.itinerary.save();
     }
+
+    // Não incrementar contador global de fotos (limite é por roteiro)
+    // if (req.subscription) {
+    //   req.subscription.incrementUsage('photos');
+    //   await req.subscription.save();
+    // }
 
     res.status(200).json({
       url: result.secure_url,
@@ -84,8 +83,9 @@ router.post('/', auth, canUploadPhoto, upload.single('photo'), async (req, res) 
  * @route   POST /api/upload/multiple
  * @desc    Upload de múltiplas fotos
  * @access  Private
+ * IMPORTANTE: upload.array() DEVE vir ANTES de canUploadPhoto para popular req.body
  */
-router.post('/multiple', auth, canUploadPhoto, upload.array('photos', 10), async (req, res) => {
+router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'Nenhuma foto foi enviada' });
@@ -111,6 +111,20 @@ router.post('/multiple', auth, canUploadPhoto, upload.array('photos', 10), async
     });
 
     const results = await Promise.all(uploadPromises);
+
+    // Se tem itineraryId, adicionar fotos ao roteiro
+    if (req.itinerary) {
+      if (!req.itinerary.rating) {
+        req.itinerary.rating = {};
+      }
+      if (!req.itinerary.rating.photos) {
+        req.itinerary.rating.photos = [];
+      }
+      const photoUrls = results.map(r => r.url);
+      req.itinerary.rating.photos.push(...photoUrls);
+      await req.itinerary.save();
+      console.log(`📸 ${photoUrls.length} fotos adicionadas ao roteiro:`, req.itinerary._id);
+    }
 
     res.status(200).json({ photos: results });
   } catch (error) {

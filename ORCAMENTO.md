@@ -1,6 +1,6 @@
 # 💰 SISTEMA DE ORÇAMENTO - GUIA DO AVENTUREIRO
 
-**Última Atualização:** 29/12/2025
+**Última Atualização:** 19/02/2026
 
 ---
 

@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.guiaaventureiro.app",
+        "paths": ["/r/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.com.guiaaventureiro.app"
+    ]
+  }
+}

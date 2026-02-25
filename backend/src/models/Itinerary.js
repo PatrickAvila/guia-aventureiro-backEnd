@@ -292,13 +292,35 @@ itinerarySchema.index({ isPublic: 1, views: -1 });
 itinerarySchema.index({ 'destination.city': 1 });
 itinerarySchema.index({ status: 1 });
 
-// Calcular duração antes de salvar
-itinerarySchema.pre('save', function(next) {
+// Calcular duração antes de validar
+itinerarySchema.pre('validate', function(next) {
   if (this.startDate && this.endDate) {
     const diffTime = Math.abs(this.endDate - this.startDate);
     this.duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }
   next();
 });
+
+// DESABILITADO: Causando loop
+// Validar que o owner existe antes de salvar
+// itinerarySchema.pre('save', async function(next) {
+//   // Se é um novo documento e tem owner, validar que o usuário existe
+//   if (this.isNew && this.owner) {
+//     try {
+//       const User = mongoose.model('User');
+//       const userExists = await User.exists({ _id: this.owner });
+//       
+//       if (!userExists) {
+//         const error = new Error('Não é possível criar roteiro: usuário não existe');
+//         error.name = 'ValidationError';
+//         return next(error);
+//       }
+//     } catch (error) {
+//       return next(error);
+//     }
+//   }
+//   
+//   next();
+// });
 
 module.exports = mongoose.model('Itinerary', itinerarySchema);

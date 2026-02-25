@@ -97,11 +97,11 @@ const generateItinerary = async ({ destination, startDate, endDate, budget, pref
   try {
     // Verificar se tem API key configurada
     if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
-      console.log('⚠️  GROQ_API_KEY não configurada. Usando MOCK temporário.');
-      console.log('📝 Configure sua chave em: https://console.groq.com/keys');
+      logger.warn('⚠️  GROQ_API_KEY não configurada. Usando MOCK temporário.');
+      logger.info('📝 Configure sua chave em: https://console.groq.com/keys');
       return generateMockItinerary({ destination, startDate, endDate });
     }
-    console.log('🚀 Gerando roteiro com Groq AI (Llama 3.1 70B)...');
+    logger.info('🚀 Gerando roteiro com Groq AI (Llama 3.1 70B)...');
     
     const diffTime = Math.abs(new Date(endDate) - new Date(startDate));
     const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
@@ -166,12 +166,12 @@ Retorne APENAS um JSON válido neste formato exato:
     });
 
     const content = completion.choices[0].message.content;
-    console.log('✅ Roteiro gerado com sucesso!');
+    logger.info('✅ Roteiro gerado com sucesso!');
     
     const response = JSON.parse(content);
     return response;
   } catch (error) {
-    console.error('Erro ao gerar roteiro com IA:', error);
+    logger.error('Erro ao gerar roteiro com IA:', error);
     throw new Error('Erro ao gerar roteiro com IA: ' + error.message);
   }
 };

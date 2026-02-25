@@ -3,7 +3,7 @@
 **Planeje suas viagens com Inteligência Artificial**
 
 ![Status](https://img.shields.io/badge/status-MVP%20Completo-success)
-![Versão](https://img.shields.io/badge/versão-1.0.6-blue)
+![Versão](https://img.shields.io/badge/versão-1.0.7-blue)
 ![Testes](https://img.shields.io/badge/testes-94.1%25%20passando-brightgreen)
 ![Licença](https://img.shields.io/badge/licença-MIT-green)
 
@@ -18,6 +18,7 @@ O **Guia do Aventureiro** é um aplicativo mobile que utiliza Inteligência Arti
 - 🤖 **IA Groq (Llama 3.3):** Roteiros personalizados em 1-2 segundos
 - 📸 **Upload de Fotos:** Até 10 fotos por roteiro (Cloudinary)
 - 💰 **Controle de Orçamento:** Gerencie gastos por categoria
+- 💳 **Pagamentos Stripe:** Sistema completo de assinaturas Premium
 - 🌍 **Explorar:** Descubra roteiros de outros viajantes
 - ⭐ **Avaliações:** Sistema completo de reviews e comentários
 - 🏆 **Gamificação:** 20 conquistas e sistema de níveis
@@ -413,6 +414,18 @@ Contribuições são bem-vindas! Por favor:
 ---
 
 ## 📝 Changelog
+
+### v1.0.7 (24/02/2026)
+- 💳 **Stripe Integration** completa e funcional
+- ✅ Checkout Stripe (pagamento seguro via browser)
+- ✅ Webhooks com verificação de assinatura (segurança)
+- ✅ Customer Portal (usuário gerencia própria assinatura)
+- ✅ Upgrade/Downgrade automático FREE ↔ PREMIUM
+- ✅ PricingScreen com UX premium (FAQ, badges, loading states)
+- ✅ Scripts de automação (test-payment.js, cancel-subscription.js)
+- 📚 Documentação completa em [docs/STRIPE.md](docs/STRIPE.md)
+- 🔒 Idempotência e rate limiting nos endpoints de pagamento
+- 🎯 Pronto para staging (modo test OK)
 
 ### v1.0.6 (19/02/2026)
 - 🧪 **237 testes** implementados e 94.1% passando

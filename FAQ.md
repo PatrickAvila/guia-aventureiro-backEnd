@@ -12,7 +12,13 @@ O Guia do Aventureiro é um aplicativo mobile que usa Inteligência Artificial p
 
 ### **O app é grátis?**
 
-Sim! 100% gratuito durante a fase MVP. No futuro, pode haver um plano premium com recursos avançados, mas sempre haverá uma versão gratuita.
+Sim! Temos um plano gratuito generoso. O Guia do Aventureiro oferece 3 planos:
+
+- **Free** (Grátis): 3 roteiros ativos, 10 criações/mês com IA, sem upload de fotos
+- **Premium** (R$ 19,90/mês): 50 roteiros ativos, criações ilimitadas com IA, 20 fotos/roteiro
+- **Pro** (R$ 49,90/mês): Roteiros ilimitados, criações ilimitadas, 50 fotos/roteiro
+
+O plano gratuito é perfeito para começar e testar todas as funcionalidades!
 
 ### **Preciso de internet para usar?**
 
@@ -89,7 +95,12 @@ Sim! Todos os roteiros podem ser editados:
 
 ### **Quantos roteiros posso criar?**
 
-Ilimitados! Não há limite de roteiros na versão gratuita.
+Depende do seu plano:
+- **Free**: 5 roteiros
+- **Premium**: 20 roteiros  
+- **Pro**: Ilimitado
+
+Você pode fazer upgrade a qualquer momento se precisar de mais!
 
 ---
 
@@ -337,17 +348,28 @@ Veja nosso [ROADMAP.md](ROADMAP.md) completo, mas algumas features planejadas:
 - Mapa interativo com pontos do roteiro
 - Notificações push
 
-**Versão 2.0 (3-4 meses):**
-- Plano Premium (recursos avançados)
-- Chat entre colaboradores
-- Integração com Booking/Airbnb
+**Versão 2.0 (futura):**
+- Integração com Booking/Airbnb para reservas
+- Integração com calendário
+- Marketplace de guias locais
+- Sistema de cupons e descontos
 
-### **Quando haverá plano pago?**
+### **Como funcionam os planos pagos?**
 
-Ainda sem data definida. Quando houver:
-- Sempre haverá versão gratuita
-- Preço previsto: ~R$ 9,90/mês
-- Usuários antigos terão desconto vitalício
+✅ **Já disponível!**
+
+**Premium (R$ 9,90/mês):**
+- 20 roteiros (vs 5 no Free)
+- 50 AI requests (vs 10 no Free)
+- 20 fotos por roteiro (vs 5 no Free)
+- Suporte prioritário
+
+**Pro (R$ 19,90/mês):**
+- Roteiros ilimitados
+- AI requests ilimitados
+- Fotos ilimitadas
+- Recursos exclusivos futuros
+- Suporte VIP
 
 ---
 
@@ -375,11 +397,43 @@ Não! Trate como um **guia inicial excelente**, mas sempre:
 
 ---
 
+## 💎 Planos e Assinaturas
+
+### **Quais são os planos disponíveis?**
+
+| Recurso | Free | Premium | Pro |
+|---------|------|---------|-----|
+| Roteiros | 5 | 20 | ∞ |
+| AI Requests | 10/mês | 50/mês | ∞ |
+| Fotos/roteiro | 5 | 20 | ∞ |
+| Suporte | Padrão | Prioritário | VIP |
+| Preço | Grátis | R$ 9,90/mês | R$ 19,90/mês |
+
+### **Como faço upgrade para Premium/Pro?**
+
+1. Vá em **Perfil → Planos e Assinaturas**
+2. Escolha o plano desejado
+3. Complete o pagamento via cartão de crédito
+4. Seu plano é ativado instantaneamente!
+
+### **Posso cancelar a qualquer momento?**
+
+Sim! Sem multas ou taxas. Você mantém acesso até o final do período pago.
+
+### **O que acontece se eu cancelar?**
+
+Você volta para o plano Free, mas:
+- Seus roteiros existentes são mantidos (mas você não pode criar novos além do limite)
+- Fotos e dados são preservados
+- Você pode reativar quando quiser
+
+---
+
 **💡 Não encontrou sua dúvida?**
 
 Entre em contato: suporte@guiaaventureiro.com
 
 ---
 
-**Atualizado em:** 29/12/2025  
-**Versão do App:** 1.0.0
+**Atualizado em:** 19/02/2026  
+**Versão do App:** 1.0.6

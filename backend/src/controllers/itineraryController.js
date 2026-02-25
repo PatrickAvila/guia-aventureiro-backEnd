@@ -6,12 +6,38 @@ const { generateItinerary } = require('../services/aiService');
 const { calculateEstimatedBudget } = require('../services/budgetService');
 const { checkAndUnlockAchievements } = require('./achievementController');
 const logger = require('../utils/logger');
+const cloudinary = require('../config/cloudinary');
+
+/**
+ * Helper: Deletar fotos do Cloudinary
+ */
+const deletePhotosFromCloudinary = async (photos) => {
+  if (!photos || photos.length === 0) return;
+  
+  console.log(`🗑️ Deletando ${photos.length} fotos do Cloudinary...`);
+  
+  for (const photoUrl of photos) {
+    try {
+      // Extrair public_id da URL do Cloudinary
+      // Exemplo: https://res.cloudinary.com/devbhqkyu/image/upload/v1771535866/guia-aventureiro/vpzvqlywn43buo0y4me0.jpg
+      const matches = photoUrl.match(/\/guia-aventureiro\/([^/.]+)/);
+      if (matches && matches[1]) {
+        const publicId = `guia-aventureiro/${matches[1]}`;
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`✅ Foto deletada do Cloudinary: ${publicId}`);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao deletar foto do Cloudinary (${photoUrl}):`, error.message);
+      // Continua deletando outras fotos mesmo se uma falhar
+    }
+  }
+};
 
 // Listar roteiros do usuário com paginação
 exports.getUserItineraries = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 50; // Aumentado de 10 para 50 para mostrar todos os roteiros Premium
     const sortBy = req.query.sortBy || 'updatedAt';
     const order = req.query.order === 'asc' ? 1 : -1;
     const skip = (page - 1) * limit;
@@ -101,10 +127,10 @@ exports.createItinerary = async (req, res) => {
 
     await itinerary.save();
 
-    // Incrementar contador de roteiros
+    // Incrementar contadores (slots + criações mensais)
     if (req.subscription) {
       req.subscription.incrementUsage('itineraries');
-      req.subscription.incrementUsage('monthlyCreations');
+      req.subscription.incrementUsage('aiGenerations');
       await req.subscription.save();
     }
 
@@ -188,7 +214,6 @@ exports.generateItineraryWithAI = async (req, res) => {
     if (req.subscription) {
       req.subscription.incrementUsage('aiGenerations');
       req.subscription.incrementUsage('itineraries');
-      req.subscription.incrementUsage('monthlyCreations');
       await req.subscription.save();
     }
 
@@ -279,6 +304,11 @@ exports.deleteItinerary = async (req, res) => {
     
     if (!isOwner && !isPublicWithoutOwner) {
       return res.status(403).json({ message: 'Apenas o dono pode deletar este roteiro.' });
+    }
+
+    // Deletar fotos do Cloudinary antes de deletar roteiro
+    if (itinerary.rating?.photos && itinerary.rating.photos.length > 0) {
+      await deletePhotosFromCloudinary(itinerary.rating.photos);
     }
 
     await itinerary.deleteOne();
@@ -398,7 +428,18 @@ exports.removeCollaborator = async (req, res) => {
 // Duplicar roteiro
 exports.duplicateItinerary = async (req, res) => {
   try {
+    console.log('\n========== INÍCIO DUPLICAÇÃO ==========');
     console.log('📋 Duplicando roteiro:', req.params.id);
+    console.log('👤 User ID:', req.userId);
+    console.log('📊 req.subscription existe?', !!req.subscription);
+    
+    if (req.subscription) {
+      console.log('📊 ESTADO INICIAL DA SUBSCRIPTION:');
+      console.log('   - Plan:', req.subscription.plan);
+      console.log('   - Itineraries (current/limit):', req.subscription.usage.itineraries.current, '/', req.subscription.usage.itineraries.limit);
+      console.log('   - AI Generations (current/limit):', req.subscription.usage.aiGenerations.current, '/', req.subscription.usage.aiGenerations.limit);
+    }
+    
     const original = await Itinerary.findById(req.params.id);
 
     if (!original) {
@@ -407,6 +448,7 @@ exports.duplicateItinerary = async (req, res) => {
     }
 
     console.log('✅ Roteiro original encontrado:', original.title);
+    console.log('   - É duplicado?', original.title.includes('(cópia)'));
     
     const duplicateData = original.toObject();
     
@@ -431,13 +473,35 @@ exports.duplicateItinerary = async (req, res) => {
     console.log('💾 Salvando duplicata...');
     await duplicate.save();
     
-    // Incrementar contador de roteiros
+    // Incrementar contadores (slots ativos + criações mensais)
     if (req.subscription) {
+      console.log('📊 Incrementando contadores de uso...');
+      console.log('📊 ANTES - itineraries.current:', req.subscription.usage.itineraries.current);
+      console.log('📊 ANTES - aiGenerations.current:', req.subscription.usage.aiGenerations.current);
+      
       req.subscription.incrementUsage('itineraries');
-      await req.subscription.save();
+      req.subscription.incrementUsage('aiGenerations');
+      
+      console.log('📊 DEPOIS - itineraries.current:', req.subscription.usage.itineraries.current);
+      console.log('📊 DEPOIS - aiGenerations.current:', req.subscription.usage.aiGenerations.current);
+      
+      const savedSub = await req.subscription.save();
+      console.log('💾 Subscription salva com sucesso');
+      console.log('📊 CONFIRMAÇÃO PÓS-SAVE:');
+      console.log('   - itineraries.current:', savedSub.usage.itineraries.current);
+      
+      // Verificar no banco se realmente foi salvo
+      const Subscription = require('../models/Subscription');
+      const freshSub = await Subscription.findOne({ user: req.userId });
+      console.log('📊 VERIFICAÇÃO NO BANCO (fresh query):');
+      console.log('   - itineraries.current:', freshSub.usage.itineraries.current);
+      console.log('   - aiGenerations.current:', freshSub.usage.aiGenerations.current);
+    } else {
+      console.warn('⚠️ req.subscription não definido - contadores NÃO foram incrementados!');
     }
     
     console.log('✅ Roteiro duplicado com sucesso:', duplicate._id);
+    console.log('========== FIM DUPLICAÇÃO ==========\n');
 
     res.status(201).json({
       message: 'Roteiro duplicado com sucesso.',
