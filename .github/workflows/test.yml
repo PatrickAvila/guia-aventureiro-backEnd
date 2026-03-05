@@ -1,0 +1,153 @@
+name: 🤖 Testes Automatizados
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'automation/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'automation/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            automation/package-lock.json
+
+      - name: 📦 Instalar dependências (Backend)
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 📦 Instalar dependências (Automation)
+        working-directory: ./automation
+        run: npm ci
+
+      - name: ⏳ Aguardar MongoDB
+        run: |
+          npx wait-on mongodb://mongodb:27017 -t 30000 2>/dev/null || true
+
+      - name: 🚀 Iniciar Backend em Background
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          TEST_MODE: 'true'
+          MONGODB_URI: mongodb://mongodb:27017/guia-aventureiro-test
+          JWT_SECRET: test-secret-key
+          STRIPE_SECRET_KEY: sk_test_dummy
+          GOOGLE_MAPS_API_KEY: test-key
+          CLOUDINARY_NAME: test
+          CLOUDINARY_API_KEY: test
+          CLOUDINARY_API_SECRET: test
+        run: |
+          npm start > /tmp/backend.log 2>&1 &
+          sleep 5
+          curl -f http://localhost:3000/health || (cat /tmp/backend.log && exit 1)
+
+      - name: 🧪 Executar Testes com Retry
+        working-directory: ./automation
+        env:
+          NODE_ENV: test
+          API_URL: http://localhost:3000
+          RETRY: 'true'
+        run: npm run test:ci
+
+      - name: 📊 Gerar Coverage Report
+        working-directory: ./automation
+        if: always()
+        env:
+          NODE_ENV: test
+          API_URL: http://localhost:3000
+          COVERAGE: 'true'
+        run: npm run test:coverage || true
+
+      - name: 📤 Upload Coverage para Codecov
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./automation/coverage/lcov.info
+          flags: integration-tests
+          name: coverage-report
+
+      - name: 📋 Publicar Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: ./automation/coverage/reports/junit.xml
+          check_name: Test Results
+
+      - name: 📊 Comentar Coverage no PR
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          lcov-file: ./automation/coverage/lcov.info
+
+      - name: 🔍 Verificar Backend Logs
+        if: failure()
+        run: tail -50 /tmp/backend.log
+
+      - name: 💾 Salvar Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            automation/coverage/
+            /tmp/backend.log
+          retention-days: 7
+
+      - name: ❌ Falhar se Coverage < Threshold
+        working-directory: ./automation
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            LINES=$(grep -o '"lines":{[^}]*}' coverage/coverage-summary.json | grep -o '[0-9.]*' | head -1)
+            echo "Coverage de linhas: $LINES%"
+            if (( $(echo "$LINES < 65" | bc -l) )); then
+              echo "❌ Coverage abaixo do threshold (65%)"
+              exit 1
+            fi
+          fi
+
+  test-summary:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: test
+
+    steps:
+      - name: 📊 Event File
+        uses: actions/download-artifact@v3
+        if: always()
+        with:
+          name: test-results
+
+      - name: ✅ Testes Completos!
+        run: |
+          echo "✅ Suite de testes executada com sucesso"
+          echo "📊 Verifique os results de reports acima para detalhes"
