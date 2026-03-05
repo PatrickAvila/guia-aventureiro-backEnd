@@ -6,6 +6,12 @@ Este guia garante que o código implementado agora funcionará em produção SEM
 
 **Única diferença:** Variáveis de ambiente (chaves Stripe TEST → PRODUCTION)
 
+Template recomendado para produção do backend:
+- `backend/.env.production.example`
+
+Checklist executável de ativação Stripe Live:
+- [STRIPE_GO_LIVE_CHECKLIST.md](./STRIPE_GO_LIVE_CHECKLIST.md)
+
 ---
 
 ## 📱 IMPLEMENTAÇÃO NO APP MOBILE (Production Ready)
@@ -132,9 +138,9 @@ export default function UpgradeScreen() {
 
     } catch (error: any) {
       console.error('Erro no upgrade:', error);
-      
+
       const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
-      
+
       if (error.response?.data?.error === 'already_premium') {
         Alert.alert('Atenção', 'Você já possui plano Premium ativo!');
       } else {
@@ -148,7 +154,7 @@ export default function UpgradeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Upgrade para Premium</Text>
-      
+
       <View style={styles.priceBox}>
         <Text style={styles.price}>R$ 9,90</Text>
         <Text style={styles.period}>por mês</Text>
@@ -165,7 +171,7 @@ export default function UpgradeScreen() {
       </View>
 
       <Text style={styles.cardLabel}>Dados do Cartão</Text>
-      
+
       {/* Campo de Cartão Stripe */}
       <CardField
         postalCodeEnabled={false}
@@ -289,8 +295,8 @@ const styles = StyleSheet.create({
 import UpgradeScreen from './screens/UpgradeScreen';
 
 // Adicione na sua stack de navegação
-<Stack.Screen 
-  name="Upgrade" 
+<Stack.Screen
+  name="Upgrade"
   component={UpgradeScreen}
   options={{ title: 'Upgrade Premium' }}
 />

@@ -4,6 +4,48 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 ---
 
+## [1.0.8] - 03/03/2026
+
+### 🧹 **Consolidação de Documentação + Hardening Produção**
+
+#### ✨ **Adicionado**
+
+- `backend/.env.production.example` com template de produção (Stripe live + checklist rápido)
+- `docs/deployment/STRIPE_GO_LIVE_CHECKLIST.md` (versão MVP para operação solo)
+
+#### 🔧 **Modificado**
+
+**Mobile (ambientes):**
+- `mobile/src/config/env.ts` com seleção explícita de ambiente (`EXPO_PUBLIC_APP_ENV=local|production`)
+- `mobile/package.json` com scripts:
+  - `npm run start:local`
+  - `npm run start:prod`
+- `mobile/.env.local.example` atualizado com variáveis locais e produção
+
+**Backend (segurança de cobrança):**
+- `backend/src/controllers/subscriptionController.js`:
+  - fluxo temporário `confirm-upgrade` bloqueado em produção (`410`)
+  - produção força uso do fluxo real Stripe Checkout
+
+**Documentação (estrutura atualizada):**
+- `docs/INDEX.md` alinhado à estrutura real (remoção de links quebrados e paths obsoletos)
+- `docs/deployment/DEPLOY_CHECKLIST.md` com links corrigidos e referências atuais
+- `README.md` atualizado:
+  - Node recomendado: `20+`
+  - links para documentação atual (`docs/INDEX.md`, `docs/STRIPE.md`)
+
+#### 🗂️ **Organização**
+
+- Arquivos históricos movidos para `archive/`
+- Documentos de deploy centralizados em `docs/deployment/`
+- Documento de orçamento centralizado em `docs/business/ORCAMENTO.md`
+
+#### 🛠️ **Infra/Tooling**
+
+- Node atualizado para `v20.20.0` e npm para `10.8.2`
+
+---
+
 ## [1.0.6] - 19/02/2026
 
 ### 🧪 **Sistema de Testes Completo - 237 Testes Passando**
@@ -743,5 +785,5 @@ Seguimos [Semantic Versioning](https://semver.org/):
 
 ---
 
-**Mantenedor:** Guia do Aventureiro Team  
+**Mantenedor:** Guia do Aventureiro Team
 **Contato:** changelog@guiaaventureiro.com

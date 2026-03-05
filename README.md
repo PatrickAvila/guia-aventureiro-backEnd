@@ -77,7 +77,7 @@ mobile/
 
 ### **Pré-requisitos**
 
-- Node.js 16+ ([Download](https://nodejs.org))
+- Node.js 20+ ([Download](https://nodejs.org))
 - npm ou yarn
 - MongoDB Atlas (grátis) ou MongoDB local
 - Expo CLI: `npm install -g expo-cli`
@@ -100,6 +100,10 @@ npm install
 # Copiar .env.example para .env
 cp .env.example .env
 # Windows: copy .env.example .env
+
+# Para produção, use o template dedicado
+# Windows: copy .env.production.example .env.production
+# (arquivo em backend/.env.production.example)
 
 # Editar .env e preencher:
 # - MONGO_URI (MongoDB Atlas ou local)
@@ -128,14 +132,19 @@ cd mobile
 # Instalar dependências
 npm install
 
-# Atualizar URL da API
-# Editar: mobile/src/config/env.ts
-# apiUrl: 'http://SEU-IP-LOCAL:3000/api'
+# Criar arquivo de ambiente local
+# Windows: copy .env.local.example .env.local
+# Mac/Linux: cp .env.local.example .env.local
 
-# Rodar app
-npm start
-# ou
-npx expo start
+# Em .env.local, configure:
+# EXPO_PUBLIC_LOCAL_API_URL=http://SEU-IP-LOCAL:3000/api
+# EXPO_PUBLIC_PROD_API_URL=https://seu-backend-producao/api
+
+# Rodar em ambiente local (Expo Go + backend local)
+npm run start:local
+
+# Rodar simulando ambiente de produção (usa API de produção)
+npm run start:prod
 
 # Opções:
 # - Pressione 'a' para Android (emulador ou físico)
@@ -179,11 +188,8 @@ CLOUDINARY_API_SECRET=seu_api_secret
 ### **Mobile (src/config/env.ts)**
 
 ```typescript
-export const env = {
-  apiUrl: 'http://SEU-IP:3000/api', // Trocar SEU-IP pelo IP local
-  cloudinaryCloudName: 'seu_cloud_name',
-  cloudinaryUploadPreset: 'guia_aventureiro',
-};
+// O app lê de variáveis EXPO_PUBLIC_* no .env.local
+// e seleciona ambiente por EXPO_PUBLIC_APP_ENV (local|production)
 ```
 
 ---
@@ -239,9 +245,10 @@ GET    /api/achievements         # Listar conquistas do usuário
 GET    /api/achievements/stats   # Estatísticas
 ```
 
-📖 **Documentação completa:** 
+📖 **Documentação completa:**
 - [API.md](API.md) - Documentação completa da API
-- [SUBSCRIPTION.md](SUBSCRIPTION.md) - Sistema de assinatura (Backend + Mobile)
+- [docs/INDEX.md](docs/INDEX.md) - Hub central da documentação
+- [docs/STRIPE.md](docs/STRIPE.md) - Sistema de assinatura e pagamentos
 - [CHANGELOG.md](CHANGELOG.md) - Histórico de mudanças
 - [automation/README.md](automation/README.md) - Guia de testes
 
@@ -250,7 +257,7 @@ GET    /api/achievements/stats   # Estatísticas
 ## 🛠️ Stack Tecnológica
 
 ### **Backend**
-- Node.js 16+
+- Node.js 20+
 - Express.js
 - MongoDB + Mongoose
 - JWT (autenticação)
@@ -431,7 +438,7 @@ Contribuições são bem-vindas! Por favor:
 - 🧪 **237 testes** implementados e 94.1% passando
 - ✅ Sistema de testes completo (16 suites, 100% independentes)
 - 🔧 Correções no backend (colaboradores, perfil, IA)
-- 📚 Documentação consolidada (SUBSCRIPTION.md)
+- 📚 Documentação consolidada (docs/INDEX.md)
 - 🧹 Testes movidos para `automation/` (organização)
 - ✅ Backend: suporte a tutorial/onboarding completo
 - 🐛 Bugs corrigidos: self-removal, owner validation, rate limiting em testes

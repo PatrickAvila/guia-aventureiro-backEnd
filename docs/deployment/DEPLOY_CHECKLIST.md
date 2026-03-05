@@ -29,14 +29,14 @@ eas whoami
   - [x] `.env.example` criado com placeholders
   - [x] Secrets de produção gerados (JWT_SECRET, etc)
   - [ ] Secrets salvos em gerenciador seguro (1Password, LastPass)
-  
+
 - [x] **MongoDB**
   - [x] MongoDB Atlas configurado (não local)
   - [x] Autenticação ativa
   - [x] IP whitelist configurado
   - [x] Backup automático diário
   - [x] Índices otimizados (32 índices)
-  
+
 - [x] **Backend Security**
   - [x] Helmet configurado
   - [x] CORS configurado
@@ -53,14 +53,14 @@ eas whoami
   - [x] Teste em dispositivos reais
   - [ ] Teste build iOS em iPhone real
   - [ ] Teste build Android real
-  
+
 - [ ] **Casos de Erro**
   - [ ] Sem internet
   - [ ] API key inválida
   - [ ] Login com senha errada
   - [ ] Token expirado
   - [ ] Upload foto >10MB
-  
+
 - [ ] **Performance**
   - [ ] App com 100+ roteiros
   - [ ] Tempo resposta IA (<3s)
@@ -77,7 +77,7 @@ eas whoami
   - [ ] Telas grandes (iPad, tablets)
   - [ ] Loading states
   - [ ] Mensagens de erro claras
-  
+
 - [ ] **Textos**
   - [ ] Revisão gramatical
   - [ ] Tom de voz consistente
@@ -93,7 +93,7 @@ eas whoami
   - [ ] `GoogleService-Info.plist` (iOS) na raiz mobile/
   - [ ] Rebuild: `npx expo run:android/ios`
   - [ ] DebugView testado
-  
+
 - [ ] **Eventos Rastreados**
   - [ ] Cadastro, Login
   - [ ] Roteiro criado/visualizado
@@ -105,7 +105,7 @@ eas whoami
   - [ ] Sentry ou Bugsnag configurado
   - [ ] Alertas de erros críticos
 
-Consulte [mobile/FIREBASE_README.md](mobile/FIREBASE_README.md) para detalhes.
+Consulte [../api/FIREBASE.md](../api/FIREBASE.md) para detalhes.
 
 ---
 
@@ -120,7 +120,7 @@ Consulte [mobile/FIREBASE_README.md](mobile/FIREBASE_README.md) para detalhes.
   - [x] SSL/HTTPS automático
   - [x] `NODE_ENV=production`
   - [ ] Auto-deploy do GitHub configurado
-  
+
 - [x] **Variáveis de Ambiente (Render)**
   - [x] `MONGODB_URI`
   - [x] `JWT_SECRET`
@@ -140,7 +140,7 @@ Consulte [mobile/FIREBASE_README.md](mobile/FIREBASE_README.md) para detalhes.
   - [x] Versão: `1.0.0`
   - [x] Ícone (1024x1024)
   - [x] Splash screen
-  
+
 - [ ] **EAS Build**
   - [ ] `eas.json` configurado
   - [ ] Credenciais Apple/Google atualizadas
@@ -236,7 +236,7 @@ Consulte [APP_STORE_DESCRIPTIONS.md](APP_STORE_DESCRIPTIONS.md) para textos pron
 6. Demo account (se necessário)
 7. Submeter (análise 7-14 dias)
 
-Consulte [APP_STORE_DESCRIPTIONS.md](APP_STORE_DESCRIPTIONS.md) e [SCREENSHOT_GUIDE.md](SCREENSHOT_GUIDE.md).
+Consulte [APP_STORE_DESCRIPTIONS.md](./APP_STORE_DESCRIPTIONS.md).
 
 ---
 
@@ -259,7 +259,7 @@ Consulte [APP_STORE_DESCRIPTIONS.md](APP_STORE_DESCRIPTIONS.md) e [SCREENSHOT_GU
 - 6.7" iPhone: 1290x2796px (iPhone 14/15 Pro Max)
 - 6.5" iPhone: 1242x2688px (iPhone 11/XS Max)
 
-Consulte [SCREENSHOT_GUIDE.md](SCREENSHOT_GUIDE.md) para guia detalhado.
+Use esta própria seção de screenshots como guia detalhado.
 
 ---
 
@@ -359,12 +359,12 @@ Antes de submeter às lojas:
 
 ## 🎯 RECURSOS ÚTEIS
 
-- [APP_STORE_DESCRIPTIONS.md](APP_STORE_DESCRIPTIONS.md) - Textos prontos
-- [SCREENSHOT_GUIDE.md](SCREENSHOT_GUIDE.md) - Guia de screenshots
-- [mobile/FIREBASE_README.md](mobile/FIREBASE_README.md) - Firebase Analytics
-- [README.md](README.md) - Documentação técnica
-- [FAQ.md](FAQ.md) - Perguntas frequentes
-- [CHANGELOG.md](CHANGELOG.md) - Histórico de versões
+- [APP_STORE_DESCRIPTIONS.md](./APP_STORE_DESCRIPTIONS.md) - Textos prontos
+- [STRIPE_GO_LIVE_CHECKLIST.md](./STRIPE_GO_LIVE_CHECKLIST.md) - Ativação Stripe Live
+- [../api/FIREBASE.md](../api/FIREBASE.md) - Firebase Analytics
+- [../../README.md](../../README.md) - Documentação técnica
+- [../../FAQ.md](../../FAQ.md) - Perguntas frequentes
+- [../../CHANGELOG.md](../../CHANGELOG.md) - Histórico de versões
 
 ---
 

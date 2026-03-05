@@ -666,7 +666,7 @@
 - `README.md`
 - `API.md`
 - `ROADMAP.md`
-- `mobile/FIREBASE_README.md`
+- `docs/api/FIREBASE.md` (documentação consolidada)
 - `mobile/INTEGRATION_GUIDE.md`
 
 ---
