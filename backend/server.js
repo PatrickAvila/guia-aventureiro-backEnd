@@ -63,27 +63,21 @@ app.use(mongoSanitize());
 app.use(xss());
 
 // CORS com whitelist - Aceitar apenas origens autorizadas em produção
-const isProd = process.env.NODE_ENV === 'production';
-const allowedOrigins = isProd
-  ? (process.env.FRONTEND_URL || '')
-      .split(',')
-      .map(url => url.trim())
-      .filter(Boolean)
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? (process.env.FRONTEND_URL || '').split(',').map(url => url.trim()).filter(Boolean)
   : true; // Em desenvolvimento, permite qualquer origem
-
-if (isProd && (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0)) {
-  throw new Error('FRONTEND_URL deve ser configurada em produção (lista CSV de origens HTTPS).');
-}
 
 app.use(cors({
   origin: (origin, callback) => {
     // Permite requisições sem origin (mobile apps, Postman)
     if (!origin) return callback(null, true);
     
+    // Em desenvolvimento, permite qualquer origem
     if (allowedOrigins === true) {
       return callback(null, true);
     }
     
+    // Em produção: valida contra whitelist (se configurado)
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
