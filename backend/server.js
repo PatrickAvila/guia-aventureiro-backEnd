@@ -11,7 +11,25 @@ const requestLogger = require('./src/middleware/requestLogger');
 
 const app = express();
 app.set('trust proxy', 1); // Confia no proxy do Render
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
+
+// Middleware: Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // Check if request is HTTPS (X-Forwarded-Proto for reverse proxies like Render)
+    const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+    
+    if (!isHttps) {
+      return res.status(403).json({
+        error: 'HTTPS required',
+        message: 'All requests must use HTTPS in production',
+      });
+    }
+    
+    next();
+  });
+}
 
 // Conectar MongoDB
 connectDB();
@@ -23,7 +41,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // Permitir scripts inline para páginas de pagamento
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
@@ -45,9 +63,17 @@ app.use(mongoSanitize());
 app.use(xss());
 
 // CORS com whitelist - Aceitar apenas origens autorizadas em produção
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? (process.env.FRONTEND_URL || '').split(',').map(url => url.trim())
+const isProd = process.env.NODE_ENV === 'production';
+const allowedOrigins = isProd
+  ? (process.env.FRONTEND_URL || '')
+      .split(',')
+      .map(url => url.trim())
+      .filter(Boolean)
   : true; // Em desenvolvimento, permite qualquer origem
+
+if (isProd && (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0)) {
+  throw new Error('FRONTEND_URL deve ser configurada em produção (lista CSV de origens HTTPS).');
+}
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -104,14 +130,6 @@ if (process.env.NODE_ENV !== 'test' && process.env.TEST_MODE !== 'true') {
   });
   app.use(limiter);
 }
-
-// Rate limiting específico para autenticação (mais restritivo)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: process.env.NODE_ENV === 'test' ? 1000 : 5, // 1000 em testes, 5 em produção
-  skipSuccessfulRequests: true, // Não contar requisições bem-sucedidas
-  message: 'Muitas tentativas. Tente novamente em 15 minutos.',
-});
 
 // Endpoint para limpar bloqueios de IP (apenas em modo de teste)
 if (process.env.TEST_MODE === 'true') {

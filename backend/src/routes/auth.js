@@ -8,9 +8,9 @@ const { validateSignup, validateLogin, validateUpdatePassword } = require('../mi
 const { checkBlocked } = require('../middleware/ipBlocker');
 
 // Públicas
-router.post('/signup', validateSignup, authController.signup);
-router.post('/login', validateLogin, authController.login);
-router.post('/refresh', authController.refreshToken);
+router.post('/signup', checkBlocked, authLimiter, validateSignup, authController.signup);
+router.post('/login', checkBlocked, authLimiter, validateLogin, authController.login);
+router.post('/refresh', checkBlocked, authLimiter, authController.refreshToken);
 
 // Protegidas
 router.post('/logout', auth, authController.logout);

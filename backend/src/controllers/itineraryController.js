@@ -151,7 +151,7 @@ exports.createItinerary = async (req, res) => {
 // Gerar roteiro com IA
 exports.generateItineraryWithAI = async (req, res) => {
   try {
-    console.log('🎨 Gerando novo roteiro com IA...');
+    logger.info('Gerando novo roteiro com IA...');
     const { destination, startDate, endDate, budget, preferences } = req.body;
 
     // Validações
@@ -217,15 +217,21 @@ exports.generateItineraryWithAI = async (req, res) => {
       await req.subscription.save();
     }
 
-    console.log('✅ Roteiro salvo com ID:', itinerary._id);
+    logger.info(`Roteiro gerado e salvo com sucesso: ${itinerary._id}`);
 
     res.status(201).json({
       message: 'Roteiro gerado com sucesso!',
       itinerary,
     });
   } catch (error) {
-    console.error('❌ Erro ao gerar roteiro:', error);
-    res.status(500).json({ message: 'Erro ao gerar roteiro.', error: error.message });
+    logger.error('Erro ao gerar roteiro com IA:', error);
+    const errorResponse = { message: 'Erro ao gerar roteiro.' };
+
+    if (process.env.NODE_ENV !== 'production') {
+      errorResponse.error = error.message;
+    }
+
+    res.status(500).json(errorResponse);
   }
 };
 

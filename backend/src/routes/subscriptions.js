@@ -24,6 +24,7 @@ router.get('/stripe-config', subscriptionController.getStripeConfig);
 // Protegidas (requerem autenticação)
 router.get('/my-subscription', auth, subscriptionController.getMySubscription);
 router.get('/usage', auth, subscriptionController.getUsage);
+// Fluxo legado: permitido apenas em dev/test (controller bloqueia em produção)
 router.post('/upgrade', auth, subscriptionController.initiateUpgrade);
 router.post('/confirm-upgrade', auth, subscriptionController.confirmUpgrade);
 router.post('/cancel', auth, subscriptionController.cancelSubscription);

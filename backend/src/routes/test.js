@@ -108,6 +108,22 @@ router.post('/reset-user', testOnly, async (req, res) => {
       achievements: [],
       unlockedBadges: []
     };
+
+    // Resetar subscription embutida no User (manter sincronia com modelo Subscription)
+    user.subscription = user.subscription || {};
+    user.subscription.plan = 'free';
+    user.subscription.status = 'active';
+    user.subscription.startDate = new Date();
+    user.subscription.endDate = null;
+    user.subscription.cancelAt = null;
+    user.subscription.cancelledAt = null;
+    user.subscription.trialEndsAt = null;
+    user.subscription.currentPeriodStart = null;
+    user.subscription.currentPeriodEnd = null;
+    user.subscription.billingCycle = null;
+    user.subscription.stripeCustomerId = null;
+    user.subscription.stripeSubscriptionId = null;
+
     await user.save();
 
     console.log(`✅ Usuário ${email} resetado: ${deletedItineraries.deletedCount} roteiros, ${deletedAchievements.deletedCount} conquistas`);
@@ -187,6 +203,76 @@ router.get('/debug-stats', testOnly, async (req, res) => {
     console.error('Erro ao buscar debug stats:', error);
     res.status(500).json({ 
       message: 'Erro ao buscar estatísticas de debug',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/test/db-status - Verificar estado do banco de dados
+router.get('/db-status', testOnly, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const Itinerary = require('../models/Itinerary');
+    const Subscription = require('../models/Subscription');
+    const Achievement = require('../models/Achievement');
+
+    const totalUsers = await User.countDocuments();
+    const totalItineraries = await Itinerary.countDocuments();
+    const totalSubscriptions = await Subscription.countDocuments();
+    const totalAchievements = await Achievement.countDocuments();
+
+    // Buscar todos os usuários (apenas info básica)
+    const users = await User.find().select('email name subscription.plan');
+
+    // Buscar todas as subscriptions
+    const subscriptions = await Subscription.find().select('user plan status usage');
+
+    // Verificar se há dados órfãos (subscriptions sem usuário correspondente)
+    const userIds = users.map(u => u._id.toString());
+    const orphanSubscriptions = await Subscription.find({
+      user: { $nin: users.map(u => u._id) }
+    }).countDocuments();
+
+    // Verificar se há itinerários órfãos (sem owner)
+    const orphanItineraries = await Itinerary.find({
+      owner: { $nin: users.map(u => u._id) }
+    }).countDocuments();
+
+    // Verificar se há achievements órfãos
+    const orphanAchievements = await Achievement.find({
+      user: { $nin: users.map(u => u._id) }
+    }).countDocuments();
+
+    res.json({
+      summary: {
+        totalUsers,
+        totalItineraries,
+        totalSubscriptions,
+        totalAchievements
+      },
+      orphans: {
+        subscriptions: orphanSubscriptions,
+        itineraries: orphanItineraries,
+        achievements: orphanAchievements,
+        hasOrphans: orphanSubscriptions > 0 || orphanItineraries > 0 || orphanAchievements > 0
+      },
+      users: users.map(u => ({
+        email: u.email,
+        name: u.name,
+        plan: u.subscription?.plan || 'N/A'
+      })),
+      subscriptions: subscriptions.map(s => ({
+        userId: s.user,
+        plan: s.plan,
+        status: s.status,
+        itinerariesUsed: s.usage?.itineraries?.current || 0,
+        itinerariesLimit: s.usage?.itineraries?.limit || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Erro ao verificar status do banco:', error);
+    res.status(500).json({ 
+      message: 'Erro ao verificar status do banco',
       error: error.message 
     });
   }

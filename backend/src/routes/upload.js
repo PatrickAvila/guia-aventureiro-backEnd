@@ -4,6 +4,7 @@ const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const auth = require('../middleware/auth');
 const { canUploadPhoto, incrementUsage } = require('../middleware/checkLimits');
+const Itinerary = require('../models/Itinerary');
 
 const router = express.Router();
 
@@ -152,6 +153,65 @@ router.delete('/:publicId', auth, async (req, res) => {
   } catch (error) {
     console.error('Erro ao deletar foto:', error);
     res.status(500).json({ message: 'Erro ao deletar foto' });
+  }
+});
+
+/**
+ * @route   DELETE /api/upload
+ * @desc    Remove foto do roteiro (persistência) e tenta remover do Cloudinary
+ * @access  Private
+ */
+router.delete('/', auth, async (req, res) => {
+  try {
+    const { itineraryId, photoUrl } = req.body || {};
+
+    if (!itineraryId || !photoUrl) {
+      return res.status(400).json({ message: 'itineraryId e photoUrl são obrigatórios' });
+    }
+
+    const itinerary = await Itinerary.findById(itineraryId);
+    if (!itinerary) {
+      return res.status(404).json({ message: 'Roteiro não encontrado' });
+    }
+
+    const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
+    const collaborator = itinerary.collaborators && itinerary.collaborators.find(
+      collab => collab.user.toString() === req.userId.toString()
+    );
+
+    if (!isOwner && !collaborator) {
+      return res.status(403).json({ message: 'Sem permissão para remover foto deste roteiro' });
+    }
+
+    if (!itinerary.rating || !Array.isArray(itinerary.rating.photos)) {
+      return res.status(404).json({ message: 'Nenhuma foto encontrada neste roteiro' });
+    }
+
+    const photoIndex = itinerary.rating.photos.indexOf(photoUrl);
+    if (photoIndex === -1) {
+      return res.status(404).json({ message: 'Foto não encontrada no roteiro' });
+    }
+
+    itinerary.rating.photos.splice(photoIndex, 1);
+    await itinerary.save();
+
+    try {
+      const matches = photoUrl.match(/\/guia-aventureiro\/([^/.]+)/);
+      if (matches && matches[1]) {
+        const publicId = `guia-aventureiro/${matches[1]}`;
+        await cloudinary.uploader.destroy(publicId);
+      }
+    } catch (cloudinaryError) {
+      console.error('Falha ao remover imagem no Cloudinary (foto já removida do roteiro):', cloudinaryError.message);
+    }
+
+    return res.status(200).json({
+      message: 'Foto removida com sucesso',
+      remainingPhotos: itinerary.rating.photos,
+    });
+  } catch (error) {
+    console.error('Erro ao remover foto do roteiro:', error);
+    return res.status(500).json({ message: 'Erro ao remover foto do roteiro' });
   }
 });
 

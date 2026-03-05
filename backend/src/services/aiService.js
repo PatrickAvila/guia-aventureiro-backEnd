@@ -1,5 +1,6 @@
 // backend/src/services/aiService.js
 const Groq = require('groq-sdk');
+const logger = require('../utils/logger');
 
 // Inicializar Groq (IA principal - Fase 1 e 2)
 const groq = new Groq({

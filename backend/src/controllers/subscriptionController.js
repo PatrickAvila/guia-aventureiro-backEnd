@@ -15,7 +15,7 @@ exports.getPlans = async (req, res, next) => {
       ...plan,
       savings: getYearlySavings(plan.id),
     }));
-    
+
     res.json({ plans });
   } catch (error) {
     logger.error('Erro ao buscar planos:', error);
@@ -30,16 +30,16 @@ exports.getPlans = async (req, res, next) => {
 exports.getMySubscription = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       // Criar subscription Free se não existe
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     const plan = getPlan(subscription.plan);
-    
+
     res.json({
       subscription: {
         ...subscription.toObject(),
@@ -59,34 +59,32 @@ exports.getMySubscription = async (req, res, next) => {
 exports.getUsage = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
-    console.log('📊 GET /usage chamado para userId:', userId);
+
     const subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription não encontrada' });
     }
-    
-    console.log('📊 Subscription encontrada:');
-    console.log('   - Plan:', subscription.plan);
-    console.log('   - Itineraries:', subscription.usage.itineraries.current, '/', subscription.usage.itineraries.limit);
-    console.log('   - AI Generations:', subscription.usage.aiGenerations.current, '/', subscription.usage.aiGenerations.limit);
-    
+
     const plan = getPlan(subscription.plan);
-    
+
     // Calcular percentuais de uso
     const usage = {
       itineraries: {
         current: subscription.usage.itineraries.current,
         limit: subscription.usage.itineraries.limit,
-        percentage: Math.round((subscription.usage.itineraries.current / subscription.usage.itineraries.limit) * 100),
-        unlimited: false,
+        percentage: subscription.usage.itineraries.limit > 0
+          ? Math.round((subscription.usage.itineraries.current / subscription.usage.itineraries.limit) * 100)
+          : 0,
+        unlimited: subscription.plan === 'premium' && subscription.usage.itineraries.limit >= 50,
       },
       aiGenerations: {
         current: subscription.usage.aiGenerations.current,
         limit: subscription.usage.aiGenerations.limit,
         percentage: subscription.plan === 'premium' ? 0 :
-          Math.round((subscription.usage.aiGenerations.current / subscription.usage.aiGenerations.limit) * 100),
+          (subscription.usage.aiGenerations.limit > 0
+            ? Math.round((subscription.usage.aiGenerations.current / subscription.usage.aiGenerations.limit) * 100)
+            : 0),
         unlimited: subscription.plan === 'premium',
         resetsAt: new Date(subscription.usage.aiGenerations.lastReset.getFullYear(),
                           subscription.usage.aiGenerations.lastReset.getMonth() + 1, 1),
@@ -94,15 +92,12 @@ exports.getUsage = async (req, res, next) => {
       photos: {
         current: subscription.usage.photos.current,
         limit: subscription.usage.photos.limit,
-        percentage: Math.round((subscription.usage.photos.current / subscription.usage.photos.limit) * 100),
-      },
-      collaborators: {
-        current: subscription.usage.collaborators.current,
-        limit: subscription.usage.collaborators.limit,
-        unlimited: false,
+        percentage: subscription.usage.photos.limit > 0
+          ? Math.round((subscription.usage.photos.current / subscription.usage.photos.limit) * 100)
+          : 0,
       },
     };
-    
+
     res.json({
       usage,
       plan: subscription.plan,
@@ -120,32 +115,41 @@ exports.getUsage = async (req, res, next) => {
  */
 exports.initiateUpgrade = async (req, res, next) => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production' && process.env.TEST_MODE !== 'true';
+    if (isProduction) {
+      return res.status(410).json({
+        error: 'deprecated_upgrade_flow',
+        message: 'Fluxo temporário desativado em produção. Use Stripe Checkout.',
+        action: 'POST /api/checkout/create-session'
+      });
+    }
+
     const userId = req.userId;
     const { targetPlan, billingCycle } = req.body;
-    
+
     if (!isValidPlan(targetPlan)) {
       return res.status(400).json({ message: 'Plano inválido' });
     }
-    
+
     if (targetPlan === 'free') {
       return res.status(400).json({ message: 'Não é possível fazer upgrade para plano gratuito' });
     }
-    
+
     if (!['monthly', 'yearly'].includes(billingCycle)) {
       return res.status(400).json({ message: 'Ciclo de cobrança inválido' });
     }
-    
+
     const subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription não encontrada' });
     }
-    
+
     const plan = getPlan(targetPlan);
-    
+
     // TODO: Integrar com Stripe para criar checkout session
     // Por enquanto, retornar informações para o frontend
-    
+
     res.json({
       message: 'Upgrade iniciado',
       redirectUrl: '/api/subscriptions/checkout', // Seria URL do Stripe
@@ -173,24 +177,32 @@ exports.initiateUpgrade = async (req, res, next) => {
  */
 exports.confirmUpgrade = async (req, res, next) => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production' && process.env.TEST_MODE !== 'true';
+    if (isProduction) {
+      return res.status(410).json({
+        error: 'deprecated_upgrade_flow',
+        message: 'Fluxo temporário desativado em produção. Use Stripe Checkout.',
+      });
+    }
+
     const userId = req.userId;
     const { targetPlan, billingCycle } = req.body;
-    
+
     if (!isValidPlan(targetPlan)) {
       return res.status(400).json({ message: 'Plano inválido' });
     }
-    
+
     const subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription não encontrada' });
     }
-    
+
     // Fazer upgrade
     subscription.upgrade(targetPlan);
     subscription.billingCycle = billingCycle || 'monthly';
     subscription.paymentMethod = 'stripe'; // Temporário
-    
+
     // Definir próxima data de cobrança
     const nextBilling = new Date();
     if (billingCycle === 'monthly') {
@@ -200,11 +212,11 @@ exports.confirmUpgrade = async (req, res, next) => {
     }
     subscription.nextBillingDate = nextBilling;
     subscription.endDate = nextBilling;
-    
+
     await subscription.save();
-    
+
     logger.log(`✨ Upgrade realizado: Usuário ${userId} -> ${targetPlan}`);
-    
+
     res.json({
       message: 'Upgrade realizado com sucesso!',
       subscription: subscription.toObject(),
@@ -223,31 +235,31 @@ exports.cancelSubscription = async (req, res, next) => {
   try {
     const userId = req.userId;
     const { reason } = req.body;
-    
+
     const subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription não encontrada' });
     }
-    
+
     if (subscription.plan === 'free') {
       return res.status(400).json({ message: 'Não é possível cancelar plano gratuito' });
     }
-    
+
     subscription.status = 'cancelled';
     subscription.cancelledAt = new Date();
     subscription.metadata.cancelReason = reason;
-    
+
     subscription.history.push({
       plan: subscription.plan,
       action: 'cancelled',
       reason: reason || 'Não informado',
     });
-    
+
     await subscription.save();
-    
+
     logger.log(`⚠️ Cancelamento: Usuário ${userId} cancelou ${subscription.plan}`);
-    
+
     res.json({
       message: 'Assinatura cancelada. Você terá acesso até o fim do período pago.',
       subscription: subscription.toObject(),
@@ -266,30 +278,30 @@ exports.cancelSubscription = async (req, res, next) => {
 exports.reactivateSubscription = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     const subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       return res.status(404).json({ message: 'Subscription não encontrada' });
     }
-    
+
     if (subscription.status !== 'cancelled') {
       return res.status(400).json({ message: 'Assinatura não está cancelada' });
     }
-    
+
     subscription.status = 'active';
     subscription.cancelledAt = null;
-    
+
     subscription.history.push({
       plan: subscription.plan,
       action: 'renewed',
       reason: 'Reativação pelo usuário',
     });
-    
+
     await subscription.save();
-    
+
     logger.log(`✅ Reativação: Usuário ${userId} reativou ${subscription.plan}`);
-    
+
     res.json({
       message: 'Assinatura reativada com sucesso!',
       subscription: subscription.toObject(),
@@ -334,7 +346,7 @@ exports.createCheckoutSession = async (req, res) => {
     }
 
     if (subscription.plan === 'premium' && subscription.paymentStatus === 'active') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'already_premium',
         message: 'Você já possui o plano Premium ativo'
       });
@@ -347,11 +359,25 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(500).json({ error: 'stripe_not_configured' });
     }
 
-    // URLs de redirecionamento (mobile fará deep link)
-    const frontendUrl = process.env.FRONTEND_URL || 'guiaaventureiro://';
-    const baseUrl = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
-    const successUrl = `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${baseUrl}/payment/canceled`;
+    // URLs de redirecionamento HTTPS estáveis para Stripe Checkout
+    const baseUrl = process.env.STRIPE_REDIRECT_BASE_URL;
+    if (!baseUrl) {
+      return res.status(500).json({
+        error: 'stripe_not_configured',
+        message: 'STRIPE_REDIRECT_BASE_URL não configurada'
+      });
+    }
+
+    if (!baseUrl.startsWith('https://')) {
+      return res.status(500).json({
+        error: 'stripe_not_configured',
+        message: 'STRIPE_REDIRECT_BASE_URL deve começar com https://'
+      });
+    }
+
+    const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const successUrl = `${normalizedBaseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${normalizedBaseUrl}/payment/cancel`;
 
     // Criar checkout session
     const { sessionId, url } = await stripeService.createCheckoutSession(
@@ -367,18 +393,26 @@ exports.createCheckoutSession = async (req, res) => {
       sessionId,
       url,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY, // Para usar Stripe.js se necessário
+      successUrl,
+      cancelUrl,
     });
   } catch (error) {
     logger.error(`❌ Erro em createCheckoutSession: ${error.message}`);
-    
+
     if (error.message.includes('já possui')) {
       return res.status(400).json({ error: 'already_premium', message: error.message });
     }
 
-    res.status(500).json({ 
+    const response = {
       error: 'checkout_creation_failed',
-      message: error.message 
-    });
+      message: 'Erro ao criar checkout'
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+      response.details = error.message;
+    }
+
+    res.status(500).json(response);
   }
 };
 
@@ -405,14 +439,14 @@ exports.createSetupIntent = async (req, res) => {
     });
   } catch (error) {
     logger.error(`❌ Erro em createSetupIntent: ${error.message}`);
-    
+
     if (error.message.includes('já possui')) {
       return res.status(400).json({ error: 'already_premium', message: error.message });
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'setup_intent_creation_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -449,10 +483,10 @@ exports.confirmPayment = async (req, res) => {
     });
   } catch (error) {
     logger.error(`❌ Erro em confirmPayment: ${error.message}`);
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: 'payment_confirmation_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -519,9 +553,9 @@ exports.handleWebhook = async (req, res) => {
     res.json({ received: true });
   } catch (error) {
     logger.error(`❌ Erro ao processar webhook: ${error.message}`);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'webhook_processing_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -534,26 +568,26 @@ const handleSubscriptionCreated = async (subscription) => {
   try {
     // Tentar buscar userId via metadata
     let userId = subscription.metadata?.userId;
-    
+
     // Se não tem userId no metadata, buscar via Customer
     if (!userId) {
       logger.info('⚠️  userId não encontrado no metadata da subscription, buscando via customer...');
-      
+
       if (!subscription.customer) {
         logger.warn('⚠️  Subscription sem customer - pulando processamento');
         return;
       }
-      
+
       const stripe = require('../config/stripe');
       const customer = await stripe.customers.retrieve(subscription.customer);
-      
+
       if (customer.metadata?.userId) {
         userId = customer.metadata.userId;
       } else {
         // Buscar no banco pelo stripeCustomerId
         const Subscription = require('../models/Subscription');
         const userSubscription = await Subscription.findOne({ stripeCustomerId: subscription.customer });
-        
+
         if (userSubscription) {
           userId = userSubscription.user.toString();
         } else {
@@ -583,27 +617,27 @@ const handleSubscriptionCreated = async (subscription) => {
 const handleCheckoutCompleted = async (session) => {
   try {
     let userId = session.metadata?.userId;
-    
+
     // Se não tem userId no metadata, buscar via Customer
     if (!userId) {
       logger.info('⚠️  userId não encontrado no metadata, buscando via customer...');
-      
+
       // Verificar se session.customer existe
       if (!session.customer) {
         logger.warn('⚠️  Evento sintético sem customer - pulando processamento');
         return;
       }
-      
+
       const stripe = require('../config/stripe');
       const customer = await stripe.customers.retrieve(session.customer);
-      
+
       if (customer.metadata?.userId) {
         userId = customer.metadata.userId;
       } else {
         // Buscar no banco pelo stripeCustomerId
         const Subscription = require('../models/Subscription');
         const subscription = await Subscription.findOne({ stripeCustomerId: session.customer });
-        
+
         if (subscription) {
           userId = subscription.user.toString();
         } else {
@@ -649,7 +683,7 @@ const handleSubscriptionUpdated = async (subscription) => {
     // Se foi cancelada mas ainda está ativa (cancel_at_period_end)
     if (subscription.cancel_at_period_end) {
       logger.info(`⏰ Subscription ${subscription.id} será cancelada em ${new Date(subscription.cancel_at * 1000)}`);
-      
+
       const userSubscription = await Subscription.findOne({ user: userId });
       if (userSubscription) {
         userSubscription.renewsAt = new Date(subscription.current_period_end * 1000);
@@ -665,7 +699,7 @@ const handleSubscriptionUpdated = async (subscription) => {
         userSubscription.paymentStatus = 'past_due';
         await userSubscription.save();
       }
-      
+
       logger.warn(`⚠️  Pagamento atrasado: user ${userId}`);
       // TODO: Enviar email de cobrança
     }
@@ -712,7 +746,7 @@ const handlePaymentSucceeded = async (invoice) => {
   try {
     const customerId = invoice.customer;
     const subscriptionId = invoice.subscription;
-    
+
     logger.info(`✅ Pagamento bem-sucedido para customer ${customerId}, subscription ${subscriptionId}`);
 
     // Buscar usuário pelo Customer ID
@@ -720,12 +754,12 @@ const handlePaymentSucceeded = async (invoice) => {
     if (subscription) {
       // Atualizar status para active
       subscription.paymentStatus = 'active';
-      
+
       // Se ainda não tem stripeSubscriptionId, adicionar
       if (!subscription.stripeSubscriptionId && subscriptionId) {
         subscription.stripeSubscriptionId = subscriptionId;
       }
-      
+
       await subscription.save();
 
       logger.info(`✅ Status atualizado: user ${subscription.user} -> active`);
@@ -744,7 +778,7 @@ const handlePaymentSucceeded = async (invoice) => {
 const handlePaymentFailed = async (invoice) => {
   try {
     const customerId = invoice.customer;
-    
+
     logger.warn(`⚠️  Pagamento falhou para customer ${customerId}`);
 
     // Buscar usuário pelo Customer ID
@@ -779,7 +813,7 @@ exports.cancelStripeSubscription = async (req, res) => {
     }
 
     if (!subscription.stripeSubscriptionId) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'no_active_subscription',
         message: 'Nenhuma assinatura ativa encontrada'
       });
@@ -801,17 +835,17 @@ exports.cancelStripeSubscription = async (req, res) => {
 
     res.json({
       success: true,
-      message: immediately 
-        ? 'Assinatura cancelada imediatamente' 
+      message: immediately
+        ? 'Assinatura cancelada imediatamente'
         : 'Assinatura será cancelada ao fim do período de cobrança',
       endsAt: subscription.renewsAt,
     });
 
   } catch (error) {
     logger.error(`❌ Erro em cancelStripeSubscription: ${error.message}`);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'cancellation_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -826,14 +860,14 @@ exports.createCustomerPortalSession = async (req, res) => {
 
     const subscription = await Subscription.findOne({ user: userId });
     if (!subscription || !subscription.stripeCustomerId) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'no_stripe_customer',
         message: 'Cliente Stripe não encontrado'
       });
     }
 
-    // URL de retorno (mobile)
-    const returnUrl = process.env.FRONTEND_URL || 'guiaaventureiro://profile';
+    // URL de retorno (mobile/web)
+    const returnUrl = process.env.STRIPE_PORTAL_RETURN_URL || 'guiaaventureiro://profile';
 
     const { url } = await stripeService.createCustomerPortal(
       subscription.stripeCustomerId,
@@ -846,9 +880,9 @@ exports.createCustomerPortalSession = async (req, res) => {
 
   } catch (error) {
     logger.error(`❌ Erro em createCustomerPortalSession: ${error.message}`);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'portal_creation_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -879,10 +913,9 @@ exports.getStripeSubscriptionStatus = async (req, res) => {
 
   } catch (error) {
     logger.error(`❌ Erro em getStripeSubscriptionStatus: ${error.message}`);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'status_retrieval_failed',
-      message: error.message 
+      message: error.message
     });
   }
 };
-
