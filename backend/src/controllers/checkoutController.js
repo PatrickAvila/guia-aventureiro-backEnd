@@ -28,16 +28,16 @@ exports.createCheckoutSession = async (req, res) => {
 
     // Verificar se já é premium (fonte de verdade: coleção Subscription)
     if (subscription?.plan === 'premium' && subscription?.status === 'active') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Você já possui um plano Premium ativo',
-        subscription
+        subscription,
       });
     }
 
     const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
     if (!priceId) {
       return res.status(500).json({
-        error: 'Configuração de pagamento incompleta'
+        error: 'Configuração de pagamento incompleta',
       });
     }
 
@@ -45,17 +45,19 @@ exports.createCheckoutSession = async (req, res) => {
     const redirectBaseUrl = process.env.STRIPE_REDIRECT_BASE_URL;
     if (!redirectBaseUrl) {
       return res.status(500).json({
-        error: 'Configuração de redirecionamento não definida'
+        error: 'Configuração de redirecionamento não definida',
       });
     }
 
     if (!redirectBaseUrl.startsWith('https://')) {
       return res.status(500).json({
-        error: 'STRIPE_REDIRECT_BASE_URL deve começar com https://'
+        error: 'STRIPE_REDIRECT_BASE_URL deve começar com https://',
       });
     }
 
-    const normalizedBaseUrl = redirectBaseUrl.endsWith('/') ? redirectBaseUrl.slice(0, -1) : redirectBaseUrl;
+    const normalizedBaseUrl = redirectBaseUrl.endsWith('/')
+      ? redirectBaseUrl.slice(0, -1)
+      : redirectBaseUrl;
     const successUrl = `${normalizedBaseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${normalizedBaseUrl}/payment/cancel`;
 
@@ -71,13 +73,12 @@ exports.createCheckoutSession = async (req, res) => {
       sessionId,
       url,
       successUrl,
-      cancelUrl
+      cancelUrl,
     });
-
   } catch (error) {
     logger.error('Erro ao criar checkout session:', error);
     const errorResponse = {
-      error: 'Erro ao criar sessão de pagamento'
+      error: 'Erro ao criar sessão de pagamento',
     };
 
     if (process.env.NODE_ENV !== 'production') {
@@ -95,20 +96,27 @@ exports.verifyCheckoutSession = async (req, res) => {
   try {
     const stripe = getStripe();
     const { sessionId } = req.params;
-    
+
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['subscription']
+      expand: ['subscription'],
     });
 
     if (!session) {
       return res.status(404).json({ error: 'Sessão não encontrada' });
     }
 
+    // Para subscriptions, considerar checkout completo também (nem sempre vem como "paid" imediatamente).
+    const isCheckoutCompleted = session.status === 'complete';
+    const hasSuccessfulPaymentState =
+      session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+    const shouldActivatePremium =
+      !!session.customer && (isCheckoutCompleted || hasSuccessfulPaymentState);
+
     // Se o pagamento foi bem-sucedido, atualizar usuário no banco de dados
-    if (session.payment_status === 'paid' && session.customer) {
+    if (shouldActivatePremium) {
       // Buscar usuário pela metadata da sessão ou pelo customer ID
       let user = null;
-      
+
       if (session.metadata?.userId) {
         user = await User.findById(session.metadata.userId);
       }
@@ -125,13 +133,19 @@ exports.verifyCheckoutSession = async (req, res) => {
         user.subscription.status = 'active';
         user.subscription.stripeCustomerId = session.customer;
         user.subscription.startDate = new Date();
-        
+
         // Se houver subscription ID, salvar para gerenciamento futuro
         if (session.subscription?.id) {
           user.subscription.stripeSubscriptionId = session.subscription.id;
-          user.subscription.currentPeriodStart = new Date(session.subscription.current_period_start * 1000);
-          user.subscription.currentPeriodEnd = new Date(session.subscription.current_period_end * 1000);
-          user.subscription.billingCycle = session.subscription.billing_cycle_anchor ? 'monthly' : 'monthly';
+          user.subscription.currentPeriodStart = new Date(
+            session.subscription.current_period_start * 1000
+          );
+          user.subscription.currentPeriodEnd = new Date(
+            session.subscription.current_period_end * 1000
+          );
+          user.subscription.billingCycle = session.subscription.billing_cycle_anchor
+            ? 'monthly'
+            : 'monthly';
         }
 
         await user.save();
@@ -144,13 +158,13 @@ exports.verifyCheckoutSession = async (req, res) => {
           subscription.paymentStatus = 'active';
           subscription.status = 'active';
           subscription.stripeCustomerId = session.customer;
-          
+
           // IMPORTANTE: Atualizar limites para Premium
           subscription.usage.itineraries.limit = 50;
           subscription.usage.aiGenerations.limit = 999999; // Ilimitado
           subscription.usage.photos.limit = 20; // 20 por roteiro
           subscription.usage.collaborators.limit = 5; // Futuro
-          
+
           if (session.subscription?.id) {
             subscription.stripeSubscriptionId = session.subscription.id;
             subscription.startDate = new Date();
@@ -158,7 +172,9 @@ exports.verifyCheckoutSession = async (req, res) => {
           }
 
           await subscription.save();
-          logger.info(`Subscription ${subscription._id} atualizada para premium (Subscription model)`);
+          logger.info(
+            `Subscription ${subscription._id} atualizada para premium (Subscription model)`
+          );
         }
       } else {
         logger.warn(`Usuário não encontrado para sessão ${sessionId}`);
@@ -170,13 +186,12 @@ exports.verifyCheckoutSession = async (req, res) => {
       paymentStatus: session.payment_status,
       subscription: session.subscription,
       customer: session.customer,
-      updated: session.payment_status === 'paid'
+      updated: shouldActivatePremium,
     });
-
   } catch (error) {
     logger.error('Erro ao verificar checkout session:', error);
     const errorResponse = {
-      error: 'Erro ao verificar sessão'
+      error: 'Erro ao verificar sessão',
     };
 
     if (process.env.NODE_ENV !== 'production') {

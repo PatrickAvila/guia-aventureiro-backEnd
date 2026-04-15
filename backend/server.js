@@ -19,14 +19,14 @@ if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
     // Check if request is HTTPS (X-Forwarded-Proto for reverse proxies like Render)
     const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
-    
+
     if (!isHttps) {
       return res.status(403).json({
         error: 'HTTPS required',
         message: 'All requests must use HTTPS in production',
       });
     }
-    
+
     next();
   });
 }
@@ -36,56 +36,64 @@ connectDB();
 
 // Middlewares de segurança
 // Configuração avançada do Helmet com CSP, HSTS e outras proteções
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"], // Permitir scripts inline para páginas de pagamento
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // Permitir scripts inline para páginas de pagamento
+        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
     },
-  },
-  hsts: {
-    maxAge: 31536000, // 1 ano
-    includeSubDomains: true,
-    preload: true,
-  },
-  noSniff: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-}));
+    hsts: {
+      maxAge: 31536000, // 1 ano
+      includeSubDomains: true,
+      preload: true,
+    },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
 
 app.use(mongoSanitize());
 app.use(xss());
 
 // CORS com whitelist - Aceitar apenas origens autorizadas em produção
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? (process.env.FRONTEND_URL || '').split(',').map(url => url.trim()).filter(Boolean)
-  : true; // Em desenvolvimento, permite qualquer origem
+const allowedOrigins =
+  process.env.NODE_ENV === 'production'
+    ? (process.env.FRONTEND_URL || '')
+        .split(',')
+        .map((url) => url.trim())
+        .filter(Boolean)
+    : true; // Em desenvolvimento, permite qualquer origem
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Permite requisições sem origin (mobile apps, Postman)
-    if (!origin) return callback(null, true);
-    
-    // Em desenvolvimento, permite qualquer origem
-    if (allowedOrigins === true) {
-      return callback(null, true);
-    }
-    
-    // Em produção: valida contra whitelist (se configurado)
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Origem não permitida pelo CORS'));
-    }
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Permite requisições sem origin (mobile apps, Postman)
+      if (!origin) return callback(null, true);
+
+      // Em desenvolvimento, permite qualquer origem
+      if (allowedOrigins === true) {
+        return callback(null, true);
+      }
+
+      // Em produção: valida contra whitelist (se configurado)
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origem não permitida pelo CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // ========================================
 // STRIPE WEBHOOK (ANTES DO BODY PARSER)
@@ -113,6 +121,33 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logger (auditoria segura)
 app.use(requestLogger);
 
+// Health check antes do rate limiter para não ser bloqueado pelo Render/UptimeRobot
+app.get('/health', async (req, res) => {
+  const healthcheck = {
+    status: 'OK',
+    service: 'Guia do Aventureiro API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+  };
+
+  if (mongoose.connection.readyState === 1) {
+    healthcheck.database = 'connected';
+  } else {
+    healthcheck.database = 'disconnected';
+    healthcheck.status = 'ERROR';
+  }
+
+  const memUsage = process.memoryUsage();
+  healthcheck.memory = {
+    rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
+    heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
+    heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
+  };
+
+  res.status(healthcheck.status === 'OK' ? 200 : 503).json(healthcheck);
+});
+
 // Rate limiting global (desabilitado para localhost)
 if (process.env.NODE_ENV !== 'test' && process.env.TEST_MODE !== 'true') {
   const limiter = rateLimit({
@@ -134,35 +169,6 @@ if (process.env.TEST_MODE === 'true') {
   });
 }
 
-// Rotas
-app.get('/health', async (req, res) => {
-  const healthcheck = {
-    status: 'OK',
-    service: 'Guia do Aventureiro API',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-  };
-
-  // Check MongoDB connection
-  if (mongoose.connection.readyState === 1) {
-    healthcheck.database = 'connected';
-  } else {
-    healthcheck.database = 'disconnected';
-    healthcheck.status = 'ERROR';
-  }
-
-  // Memory metrics
-  const memUsage = process.memoryUsage();
-  healthcheck.memory = {
-    rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
-    heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
-    heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
-  };
-
-  res.status(healthcheck.status === 'OK' ? 200 : 503).json(healthcheck);
-});
-
 // Rotas públicas para roteiros compartilhados
 const shareController = require('./src/controllers/shareController');
 const authMiddleware = require('./src/middleware/auth');
@@ -172,7 +178,12 @@ const { canCreateItinerary } = require('./src/middleware/checkLimits');
 app.get('/api/shared/:shareId', shareController.getSharedItinerary);
 
 // POST para copiar (requer autenticação + verificação de limites)
-app.post('/api/shared/:shareId/copy', authMiddleware, canCreateItinerary, shareController.copySharedItinerary);
+app.post(
+  '/api/shared/:shareId/copy',
+  authMiddleware,
+  canCreateItinerary,
+  shareController.copySharedItinerary
+);
 
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/subscriptions', require('./src/routes/subscriptions')); // Sistema de assinatura
