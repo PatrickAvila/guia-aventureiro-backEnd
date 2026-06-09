@@ -12,6 +12,11 @@ const buildSafeTextRegex = (value) => {
   return new RegExp(escapeRegex(normalized), 'i');
 };
 
+const getPublicUserIds = async () => {
+  const publicUsers = await User.find({ publicProfile: true }).select('_id').lean();
+  return publicUsers.map((user) => user._id);
+};
+
 /**
  * GET /api/explore/itineraries
  * Retorna feed de roteiros públicos com paginação e filtros
@@ -22,8 +27,7 @@ exports.getPublicItineraries = async (req, res, next) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
-    const publicUsers = await User.find({ publicProfile: true }).select('_id').lean();
-    const publicUserIds = publicUsers.map((user) => user._id);
+    const publicUserIds = await getPublicUserIds();
 
     // Filtros - apenas roteiros públicos
     const filters = {
@@ -123,9 +127,11 @@ exports.getPublicItineraries = async (req, res, next) => {
 exports.getFeaturedItineraries = async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+    const publicUserIds = await getPublicUserIds();
 
     const itineraries = await Itinerary.find({
       isPublic: true,
+      owner: { $in: publicUserIds },
       status: 'concluido',
       'rating.score': { $gte: 4 },
     })
@@ -148,9 +154,10 @@ exports.getFeaturedItineraries = async (req, res, next) => {
 exports.getPopularDestinations = async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+    const publicUserIds = await getPublicUserIds();
 
     const destinations = await Itinerary.aggregate([
-      { $match: { isPublic: true } },
+      { $match: { isPublic: true, owner: { $in: publicUserIds } } },
       {
         $group: {
           _id: {
@@ -199,7 +206,8 @@ exports.toggleLike = async (req, res, next) => {
       return res.status(404).json({ message: 'Roteiro não encontrado ou não é público' });
     }
 
-    const likedIndex = itinerary.likes?.indexOf(userId) ?? -1;
+    const likedIndex =
+      itinerary.likes?.findIndex((likeUserId) => likeUserId.toString() === userId) ?? -1;
 
     if (likedIndex > -1) {
       // Remover like
@@ -239,7 +247,9 @@ exports.toggleSave = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user.savedItineraries) user.savedItineraries = [];
 
-    const savedIndex = user.savedItineraries.indexOf(id);
+    const savedIndex = user.savedItineraries.findIndex(
+      (savedItineraryId) => savedItineraryId.toString() === id
+    );
 
     if (savedIndex > -1) {
       // Remover dos salvos
@@ -271,6 +281,7 @@ exports.getSavedItineraries = async (req, res, next) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const skip = (page - 1) * limit;
+    const publicUserIds = await getPublicUserIds();
 
     const user = await User.findById(userId);
     if (!user.savedItineraries || user.savedItineraries.length === 0) {
@@ -280,12 +291,26 @@ exports.getSavedItineraries = async (req, res, next) => {
       });
     }
 
-    const total = user.savedItineraries.length;
-    const savedIds = user.savedItineraries.slice(skip, skip + limit);
+    const visibleSavedItineraries = await Itinerary.find({
+      _id: { $in: user.savedItineraries },
+      isPublic: true,
+      owner: { $in: publicUserIds },
+    })
+      .select('_id')
+      .lean();
+
+    const visibleIdSet = new Set(visibleSavedItineraries.map((item) => item._id.toString()));
+    const orderedVisibleIds = user.savedItineraries.filter((savedId) =>
+      visibleIdSet.has(savedId.toString())
+    );
+
+    const total = orderedVisibleIds.length;
+    const savedIds = orderedVisibleIds.slice(skip, skip + limit);
 
     const itineraries = await Itinerary.find({
       _id: { $in: savedIds },
       isPublic: true,
+      owner: { $in: publicUserIds },
     })
       .populate('owner', 'name avatar publicProfile')
       .select('-days.activities.bookingLinks -collaborators');
