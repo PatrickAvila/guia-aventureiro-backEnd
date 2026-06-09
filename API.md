@@ -1,7 +1,7 @@
 # API Documentation - Guia do Aventureiro
 
-**Versao:** `1.0.8`  
-**Base URL (dev):** `http://localhost:3000/api`  
+**Versao:** `1.0.8`
+**Base URL (dev):** `http://localhost:3000/api`
 **Base URL (prod):** `https://guia-aventureiro-backend.onrender.com/api`
 
 ## Autenticacao
