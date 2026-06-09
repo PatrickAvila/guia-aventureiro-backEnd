@@ -31,14 +31,15 @@ const verifyStripeSignature = (req, res, next) => {
 
     // Anexar evento verificado ao request
     req.stripeEvent = event;
-    
+
     logger.info(`✅ Webhook Stripe verificado: ${event.type} (${event.id})`);
     next();
   } catch (err) {
     logger.error(`❌ Falha na verificação de webhook Stripe: ${err.message}`);
-    return res.status(400).json({ 
+    const isProd = process.env.NODE_ENV === 'production';
+    return res.status(400).json({
       error: 'invalid_signature',
-      message: err.message 
+      message: isProd ? 'Invalid signature' : err.message,
     });
   }
 };

@@ -8,6 +8,7 @@ const Notification = require('../models/Notification');
 const Message = require('../models/Message');
 const jwt = require('jsonwebtoken');
 const { recordFailedAttempt, clearFailedAttempts } = require('../middleware/ipBlocker');
+const { hashRefreshToken, compareRefreshToken } = require('../utils/tokenSecurity');
 
 const sendInternalError = (res, message, error) => {
   const response = { message };
@@ -75,7 +76,7 @@ exports.signup = async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user._id);
 
     // Salvar refresh token
-    user.refreshToken = refreshToken;
+    user.refreshToken = hashRefreshToken(refreshToken);
     user.lastLogin = new Date();
     await user.save();
 
@@ -110,7 +111,7 @@ exports.login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       // Registrar tentativa falha
-      recordFailedAttempt(req);
+      await recordFailedAttempt(req);
       return res.status(401).json({ message: 'Email ou senha incorretos.' });
     }
 
@@ -118,12 +119,12 @@ exports.login = async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user._id);
 
     // Salvar refresh token e last login
-    user.refreshToken = refreshToken;
+    user.refreshToken = hashRefreshToken(refreshToken);
     user.lastLogin = new Date();
     await user.save();
 
     // Login bem-sucedido, limpar tentativas falhas
-    clearFailedAttempts(req);
+    await clearFailedAttempts(req);
 
     // Remover password do retorno
     user.password = undefined;
@@ -153,7 +154,7 @@ exports.refreshToken = async (req, res) => {
 
     // Buscar usuário
     const user = await User.findById(decoded.userId).select('+refreshToken');
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user || !compareRefreshToken(user.refreshToken, refreshToken)) {
       return res.status(401).json({ message: 'Refresh token inválido.' });
     }
 
@@ -161,7 +162,8 @@ exports.refreshToken = async (req, res) => {
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id);
 
     // Atualizar refresh token
-    user.refreshToken = newRefreshToken;
+    // Rotaciona e persiste sempre em hash (inclui migração de formato legado)
+    user.refreshToken = hashRefreshToken(newRefreshToken);
     await user.save();
 
     res.json({

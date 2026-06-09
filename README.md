@@ -178,6 +178,7 @@ MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/guia_aventureiro_db
 # JWT Secrets (GERAR NOVOS!)
 JWT_SECRET=072d43d7b528fcbb06bd623d42cb465201ee32bb7692795bf709a0371e03390a
 JWT_REFRESH_SECRET=59364e349be282ea5ef77b447bc710e9126ec06c2048044236bfebedc8d814bf
+REFRESH_TOKEN_PEPPER=mais_uma_chave_longa_para_hash_de_refresh_token
 
 # Groq AI (Grátis - 14.400 req/dia)
 GROQ_API_KEY=gsk_SUA_CHAVE_AQUI
@@ -186,6 +187,11 @@ GROQ_API_KEY=gsk_SUA_CHAVE_AQUI
 CLOUDINARY_CLOUD_NAME=seu_cloud_name
 CLOUDINARY_API_KEY=sua_api_key
 CLOUDINARY_API_SECRET=seu_api_secret
+
+# Redis (rate-limit/bloqueio distribuído)
+REDIS_URL=redis://localhost:6379
+# Se true, a API não inicia sem Redis
+REDIS_REQUIRED=false
 ```
 
 ### **Mobile (src/config/env.ts)**

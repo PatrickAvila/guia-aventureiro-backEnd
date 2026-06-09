@@ -8,6 +8,7 @@ const xss = require('xss-clean');
 const mongoose = require('mongoose');
 const connectDB = require('./src/config/database');
 const requestLogger = require('./src/middleware/requestLogger');
+const { initializeIpBlocker } = require('./src/middleware/ipBlocker');
 
 const app = express();
 app.set('trust proxy', 1); // Confia no proxy do Render
@@ -163,8 +164,8 @@ if (process.env.NODE_ENV !== 'test' && process.env.TEST_MODE !== 'true') {
 // Endpoint para limpar bloqueios de IP (apenas em modo de teste)
 if (process.env.TEST_MODE === 'true') {
   const { clearBlocks } = require('./src/middleware/ipBlocker');
-  app.post('/test/clear-blocks', (req, res) => {
-    clearBlocks();
+  app.post('/test/clear-blocks', async (req, res) => {
+    await clearBlocks();
     res.json({ message: 'Bloqueios limpos com sucesso' });
   });
 }
@@ -224,17 +225,28 @@ if (require.main === module) {
   const { initializeSocket } = require('./src/services/socketService');
   const { initializeScheduler } = require('./src/services/notificationScheduler');
 
-  const server = http.createServer(app);
+  const startServer = async () => {
+    try {
+      await initializeIpBlocker();
 
-  // Inicializar Socket.IO
-  initializeSocket(server);
+      const server = http.createServer(app);
 
-  // Inicializar scheduler de notificações
-  initializeScheduler();
+      // Inicializar Socket.IO
+      initializeSocket(server);
 
-  server.listen(PORT, () => {
-    console.log(`🚀 Guia do Aventureiro API rodando na porta ${PORT}`);
-    console.log(`📍 Health check: http://localhost:${PORT}/health`);
-    console.log(`⚡ WebSocket habilitado para colaboração em tempo real`);
-  });
+      // Inicializar scheduler de notificações
+      initializeScheduler();
+
+      server.listen(PORT, () => {
+        console.log(`🚀 Guia do Aventureiro API rodando na porta ${PORT}`);
+        console.log(`📍 Health check: http://localhost:${PORT}/health`);
+        console.log(`⚡ WebSocket habilitado para colaboração em tempo real`);
+      });
+    } catch (error) {
+      console.error('❌ Falha ao iniciar servidor:', error.message);
+      process.exit(1);
+    }
+  };
+
+  startServer();
 }
