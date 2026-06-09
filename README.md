@@ -1,6 +1,6 @@
 # 🗺️ Guia do Aventureiro
 
-**Planeje suas viagens com Inteligência Artificial**
+## Planeje suas viagens com Inteligência Artificial
 
 ![Status](https://img.shields.io/badge/status-MVP%20Completo-success)
 ![Versão](https://img.shields.io/badge/versão-1.0.7-blue)
@@ -16,7 +16,7 @@ O **Guia do Aventureiro** é um aplicativo mobile que utiliza Inteligência Arti
 ### ✨ Features Principais
 
 - 🤖 **IA Groq (Llama 3.3):** Roteiros personalizados em 1-2 segundos
-- 📸 **Upload de Fotos:** Até 10 fotos por roteiro (Cloudinary)
+- 📸 **Upload de Fotos:** Premium com até 20 fotos por roteiro (Cloudinary)
 - 💰 **Controle de Orçamento:** Gerencie gastos por categoria
 - 💳 **Pagamentos Stripe:** Sistema completo de assinaturas Premium
 - 🌍 **Explorar:** Descubra roteiros de outros viajantes
@@ -33,7 +33,7 @@ O **Guia do Aventureiro** é um aplicativo mobile que utiliza Inteligência Arti
 
 ### **Backend (Node.js + Express)**
 
-```
+```text
 backend/
 ├── src/
 │   ├── config/          # Configurações (DB, Cloudinary)
@@ -52,7 +52,7 @@ backend/
 
 ### **Mobile (React Native + Expo)**
 
-```
+```text
 mobile/
 ├── src/
 │   ├── components/      # Componentes reutilizáveis
@@ -201,7 +201,7 @@ CLOUDINARY_API_SECRET=seu_api_secret
 
 ### **Base URL**
 
-```
+```text
 http://localhost:3000/api
 ```
 
@@ -240,6 +240,7 @@ GET    /api/explore/featured           # Roteiros em destaque
 GET    /api/explore/popular-destinations # Destinos em alta
 POST   /api/explore/like/:id           # Curtir roteiro
 POST   /api/explore/save/:id           # Salvar roteiro
+GET    /api/explore/saved              # Listar roteiros salvos
 ```
 
 #### **Avaliações**
@@ -255,6 +256,8 @@ GET    /api/ratings/:itineraryId # Listar avaliações
 GET    /api/achievements         # Listar conquistas do usuário
 GET    /api/achievements/stats   # Estatísticas
 ```
+
+> Nota: o endpoint de listagem de conquistas atual é `GET /api/achievements/my-achievements`.
 
 📖 **Documentação completa:**
 
@@ -326,7 +329,7 @@ GET    /api/achievements/stats   # Estatísticas
 
 **Versão 2.0 (90 dias):**
 
-- Plano Premium (R$ 9,90/mês)
+- Evolução do plano Premium (atual: R$ 19,90/mês)
 - Afiliações (Booking, Decolar)
 - Features avançadas
 
@@ -420,9 +423,9 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ## 👨‍💻 Autor
 
-**Guia do Aventureiro Team**
+### Guia do Aventureiro Team
 
-- 📧 Email: contato@guiaaventureiro.com
+- 📧 Email: [contato@guiaaventureiro.com](mailto:contato@guiaaventureiro.com)
 - 📱 Instagram: [@guia.aventureiro](https://instagram.com/guia.aventureiro)
 
 ---
@@ -499,7 +502,7 @@ Encontrou um bug? Tem uma sugestão?
 
 - 🐛 [Abrir Issue](https://github.com/seu-usuario/guia-aventureiro/issues)
 - 💬 [Discussões](https://github.com/seu-usuario/guia-aventureiro/discussions)
-- 📧 Email: suporte@guiaaventureiro.com
+- 📧 Email: [suporte@guiaaventureiro.com](mailto:suporte@guiaaventureiro.com)
 
 ---
 
