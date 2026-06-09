@@ -136,16 +136,49 @@ router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async
 
 /**
  * @route   DELETE /api/upload/:publicId
- * @desc    Deletar foto do Cloudinary
+ * @desc    Deletar foto do Cloudinary com validação de vínculo ao roteiro
  * @access  Private
  */
 router.delete('/:publicId', auth, async (req, res) => {
   try {
     const { publicId } = req.params;
-    
-    // Remover prefixo se existir
-    const cleanPublicId = publicId.replace('guia-aventureiro/', '');
+    const itineraryId = req.query.itineraryId || req.body?.itineraryId;
+
+    if (!itineraryId) {
+      return res.status(400).json({ message: 'itineraryId é obrigatório para deletar foto' });
+    }
+
+    const itinerary = await Itinerary.findById(itineraryId);
+    if (!itinerary) {
+      return res.status(404).json({ message: 'Roteiro não encontrado' });
+    }
+
+    const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
+    const collaborator = itinerary.collaborators && itinerary.collaborators.find(
+      collab => collab.user.toString() === req.userId.toString()
+    );
+
+    if (!isOwner && !collaborator) {
+      return res.status(403).json({ message: 'Sem permissão para deletar foto deste roteiro' });
+    }
+
+    if (!itinerary.rating || !Array.isArray(itinerary.rating.photos)) {
+      return res.status(404).json({ message: 'Nenhuma foto encontrada neste roteiro' });
+    }
+
+    const cleanPublicId = decodeURIComponent(publicId).replace('guia-aventureiro/', '');
     const fullPublicId = `guia-aventureiro/${cleanPublicId}`;
+
+    const photoUrlIndex = itinerary.rating.photos.findIndex((photoUrl) =>
+      typeof photoUrl === 'string' && photoUrl.includes(`/guia-aventureiro/${cleanPublicId}`)
+    );
+
+    if (photoUrlIndex === -1) {
+      return res.status(404).json({ message: 'Foto não vinculada ao roteiro informado' });
+    }
+
+    itinerary.rating.photos.splice(photoUrlIndex, 1);
+    await itinerary.save();
 
     await cloudinary.uploader.destroy(fullPublicId);
 

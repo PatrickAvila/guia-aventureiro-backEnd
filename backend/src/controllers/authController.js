@@ -1,8 +1,23 @@
 // backend/src/controllers/authController.js
 const User = require('../models/User');
 const Subscription = require('../models/Subscription');
+const Itinerary = require('../models/Itinerary');
+const Rating = require('../models/Rating');
+const Achievement = require('../models/Achievement');
+const Notification = require('../models/Notification');
+const Message = require('../models/Message');
 const jwt = require('jsonwebtoken');
 const { recordFailedAttempt, clearFailedAttempts } = require('../middleware/ipBlocker');
+
+const sendInternalError = (res, message, error) => {
+  const response = { message };
+
+  if (process.env.NODE_ENV !== 'production') {
+    response.debug = error.message;
+  }
+
+  return res.status(500).json(response);
+};
 
 // Gerar tokens
 const generateTokens = (userId) => {
@@ -79,7 +94,7 @@ exports.signup = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao criar conta.', error: error.message });
+    return sendInternalError(res, 'Erro ao criar conta.', error);
   }
 };
 
@@ -128,7 +143,7 @@ exports.login = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao fazer login.', error: error.message });
+    return sendInternalError(res, 'Erro ao fazer login.', error);
   }
 };
 
@@ -175,7 +190,7 @@ exports.logout = async (req, res) => {
 
     res.json({ message: 'Logout realizado com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao fazer logout.', error: error.message });
+    return sendInternalError(res, 'Erro ao fazer logout.', error);
   }
 };
 
@@ -185,7 +200,7 @@ exports.getProfile = async (req, res) => {
     const user = await User.findById(req.userId);
     res.json({ user });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar perfil.', error: error.message });
+    return sendInternalError(res, 'Erro ao buscar perfil.', error);
   }
 };
 
@@ -212,7 +227,7 @@ exports.updateProfile = async (req, res) => {
 
     res.json({ message: 'Perfil atualizado com sucesso.', user });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar perfil.', error: error.message });
+    return sendInternalError(res, 'Erro ao atualizar perfil.', error);
   }
 };
 
@@ -248,17 +263,47 @@ exports.updatePassword = async (req, res) => {
 
     res.json({ message: 'Senha atualizada com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar senha.', error: error.message });
+    return sendInternalError(res, 'Erro ao atualizar senha.', error);
   }
 };
 
 // Delete account
 exports.deleteAccount = async (req, res) => {
   try {
+    const ownedItineraries = await Itinerary.find({ owner: req.userId }).select('_id');
+    const ownedItineraryIds = ownedItineraries.map((itinerary) => itinerary._id);
+
+    await Promise.all([
+      Itinerary.deleteMany({ owner: req.userId }),
+      Itinerary.updateMany(
+        { 'collaborators.user': req.userId },
+        { $pull: { collaborators: { user: req.userId } } }
+      ),
+      Rating.deleteMany({
+        $or: [
+          { user: req.userId },
+          { itinerary: { $in: ownedItineraryIds } },
+        ],
+      }),
+      Message.deleteMany({
+        $or: [
+          { sender: req.userId },
+          { itinerary: { $in: ownedItineraryIds } },
+        ],
+      }),
+      Achievement.deleteMany({ user: req.userId }),
+      Notification.deleteMany({ user: req.userId }),
+      Subscription.deleteOne({ user: req.userId }),
+      User.updateMany(
+        {},
+        { $pull: { savedItineraries: { $in: ownedItineraryIds } } }
+      ),
+    ]);
+
     await User.findByIdAndDelete(req.userId);
     res.json({ message: 'Conta excluída com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao excluir conta.', error: error.message });
+    return sendInternalError(res, 'Erro ao excluir conta.', error);
   }
 };
 
@@ -298,6 +343,6 @@ exports.getPublicProfile = async (req, res) => {
       stats,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar perfil público.', error: error.message });
+    return sendInternalError(res, 'Erro ao buscar perfil público.', error);
   }
 };

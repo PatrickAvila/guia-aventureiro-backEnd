@@ -3,6 +3,15 @@ const Itinerary = require('../models/Itinerary');
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
+const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildSafeTextRegex = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  const normalized = value.trim().slice(0, 80);
+  if (!normalized) return null;
+  return new RegExp(escapeRegex(normalized), 'i');
+};
+
 /**
  * GET /api/explore/itineraries
  * Retorna feed de roteiros públicos com paginação e filtros
@@ -13,17 +22,25 @@ exports.getPublicItineraries = async (req, res, next) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const skip = (page - 1) * limit;
 
+    const publicUsers = await User.find({ publicProfile: true }).select('_id').lean();
+    const publicUserIds = publicUsers.map((user) => user._id);
+
     // Filtros - apenas roteiros públicos
-    const filters = { isPublic: true };
+    const filters = {
+      isPublic: true,
+      owner: { $in: publicUserIds },
+    };
 
     // Filtro por país
-    if (req.query.country) {
-      filters['destination.country'] = { $regex: req.query.country, $options: 'i' };
+    const countryRegex = buildSafeTextRegex(req.query.country);
+    if (countryRegex) {
+      filters['destination.country'] = countryRegex;
     }
 
     // Filtro por cidade
-    if (req.query.city) {
-      filters['destination.city'] = { $regex: req.query.city, $options: 'i' };
+    const cityRegex = buildSafeTextRegex(req.query.city);
+    if (cityRegex) {
+      filters['destination.city'] = cityRegex;
     }
 
     // Filtro por nível de orçamento
@@ -50,11 +67,12 @@ exports.getPublicItineraries = async (req, res, next) => {
     }
 
     // Busca por texto (título ou destino)
-    if (req.query.search) {
+    const searchRegex = buildSafeTextRegex(req.query.search);
+    if (searchRegex) {
       filters.$or = [
-        { title: { $regex: req.query.search, $options: 'i' } },
-        { 'destination.city': { $regex: req.query.search, $options: 'i' } },
-        { 'destination.country': { $regex: req.query.search, $options: 'i' } },
+        { title: searchRegex },
+        { 'destination.city': searchRegex },
+        { 'destination.country': searchRegex },
       ];
     }
 
@@ -64,17 +82,12 @@ exports.getPublicItineraries = async (req, res, next) => {
     const sort = { [sortBy]: order };
 
     // Buscar roteiros e popular owner
-    const allItineraries = await Itinerary.find(filters)
+    const itineraries = await Itinerary.find(filters)
       .populate('owner', 'name avatar publicProfile')
       .select('-days.activities.bookingLinks -collaborators')
       .sort(sort)
       .skip(skip)
       .limit(limit);
-
-    // Filtrar apenas roteiros de usuários com perfil público
-    const itineraries = allItineraries.filter(i => 
-      i.owner && i.owner.publicProfile === true
-    );
 
     const total = await Itinerary.countDocuments(filters);
 

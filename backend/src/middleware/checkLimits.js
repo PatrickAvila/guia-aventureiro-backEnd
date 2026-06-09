@@ -127,11 +127,11 @@ exports.canUploadPhoto = async (req, res, next) => {
       const plan = getPlan(subscription.plan);
       return res.status(403).json({
         error: 'feature_locked',
-        message: 'Upload de fotos está disponível apenas para planos Premium e Pro',
+        message: 'Upload de fotos está disponível apenas para o plano Premium',
         plan: subscription.plan,
         upgrade: {
           message: 'Faça upgrade para fazer upload de fotos',
-          availablePlans: ['premium', 'pro'],
+          availablePlans: ['premium'],
         }
       });
     }
@@ -151,7 +151,7 @@ exports.canUploadPhoto = async (req, res, next) => {
       
       const currentPhotos = itinerary.rating?.photos?.length || 0;
       const plan = getPlan(subscription.plan);
-      const photoLimit = plan.limits.photos; // 20 para Premium, 50 para Pro
+      const photoLimit = plan.limits.photos; // 20 para Premium
       
       if (currentPhotos >= photoLimit) {
         return res.status(403).json({
@@ -162,9 +162,9 @@ exports.canUploadPhoto = async (req, res, next) => {
           plan: subscription.plan,
           upgrade: {
             message: subscription.plan === 'premium' 
-              ? 'Faça upgrade para Pro para adicionar até 50 fotos por roteiro'
+              ? 'Você atingiu o limite de fotos do plano Premium'
               : 'Você atingiu o limite máximo de fotos',
-            availablePlans: subscription.plan === 'premium' ? ['pro'] : [],
+            availablePlans: [],
           }
         });
       }
@@ -204,8 +204,8 @@ exports.canAddCollaborator = async (req, res, next) => {
         message: 'Colaboradores não estão disponíveis no plano Gratuito',
         plan: subscription.plan,
         upgrade: {
-          message: 'Faça upgrade para o Premium e colabore com até 5 pessoas',
-          availablePlans: ['premium', 'pro'],
+          message: 'Faça upgrade para o Premium para liberar os recursos avançados',
+          availablePlans: ['premium'],
         }
       });
     }
@@ -240,7 +240,7 @@ exports.canShareItinerary = async (req, res, next) => {
         plan: subscription.plan,
         upgrade: {
           message: 'Faça upgrade para o Premium e compartilhe seus roteiros com qualquer pessoa',
-          availablePlans: ['premium', 'pro'],
+          availablePlans: ['premium'],
         }
       });
     }
@@ -274,7 +274,7 @@ exports.requireFeature = (featureName) => {
           plan: subscription.plan,
           upgrade: {
             message: 'Faça upgrade para acessar este recurso',
-            availablePlans: subscription.plan === 'free' ? ['premium', 'pro'] : ['pro'],
+            availablePlans: subscription.plan === 'free' ? ['premium'] : [],
           }
         });
       }

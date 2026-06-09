@@ -170,7 +170,7 @@ subscriptionSchema.methods.canUseAI = function() {
 };
 
 subscriptionSchema.methods.canUploadPhoto = function() {
-  if (this.plan === 'pro') return true;
+  if (this.plan === 'premium') return true;
   return this.usage.photos.current < this.usage.photos.limit;
 };
 

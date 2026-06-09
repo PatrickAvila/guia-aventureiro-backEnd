@@ -2,13 +2,23 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const sendAuthError = (res, statusCode, message, error) => {
+  const response = { message };
+
+  if (error && process.env.NODE_ENV !== 'production') {
+    response.debug = error.message;
+  }
+
+  return res.status(statusCode).json(response);
+};
+
 const auth = async (req, res, next) => {
   try {
     // Pegar token do header
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
+      return sendAuthError(res, 401, 'Acesso negado. Token não fornecido.');
     }
 
     // Verificar token
@@ -18,7 +28,7 @@ const auth = async (req, res, next) => {
     const user = await User.findById(decoded.userId);
 
     if (!user) {
-      return res.status(401).json({ message: 'Usuário não encontrado.' });
+      return sendAuthError(res, 401, 'Usuário não encontrado.');
     }
 
     // Adicionar user ao request
@@ -28,12 +38,12 @@ const auth = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Token inválido.' });
+      return sendAuthError(res, 401, 'Token inválido.');
     }
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expirado.' });
+      return sendAuthError(res, 401, 'Token expirado.');
     }
-    res.status(500).json({ message: 'Erro ao autenticar.', error: error.message });
+    return sendAuthError(res, 500, 'Erro ao autenticar.', error);
   }
 };
 

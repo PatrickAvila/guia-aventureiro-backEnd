@@ -5,6 +5,19 @@ const { PLANS, getPlan, isValidPlan, getYearlySavings } = require('../config/pla
 const stripeService = require('../services/stripeService');
 const logger = require('../utils/logger');
 
+const buildSafeErrorResponse = (errorCode, message, error) => {
+  const response = {
+    error: errorCode,
+    message,
+  };
+
+  if (process.env.NODE_ENV !== 'production') {
+    response.debug = error.message;
+  }
+
+  return response;
+};
+
 /**
  * GET /api/subscriptions/plans
  * Listar todos os planos disponíveis
@@ -400,7 +413,10 @@ exports.createCheckoutSession = async (req, res) => {
     logger.error(`❌ Erro em createCheckoutSession: ${error.message}`);
 
     if (error.message.includes('já possui')) {
-      return res.status(400).json({ error: 'already_premium', message: error.message });
+      return res.status(400).json({
+        error: 'already_premium',
+        message: 'Você já possui um plano Premium ativo',
+      });
     }
 
     const response = {
@@ -441,13 +457,19 @@ exports.createSetupIntent = async (req, res) => {
     logger.error(`❌ Erro em createSetupIntent: ${error.message}`);
 
     if (error.message.includes('já possui')) {
-      return res.status(400).json({ error: 'already_premium', message: error.message });
+      return res.status(400).json({
+        error: 'already_premium',
+        message: 'Você já possui um plano Premium ativo',
+      });
     }
 
-    res.status(500).json({
-      error: 'setup_intent_creation_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'setup_intent_creation_failed',
+        'Não foi possível iniciar a configuração de pagamento no momento',
+        error
+      )
+    );
   }
 };
 
@@ -484,10 +506,13 @@ exports.confirmPayment = async (req, res) => {
   } catch (error) {
     logger.error(`❌ Erro em confirmPayment: ${error.message}`);
 
-    res.status(500).json({
-      error: 'payment_confirmation_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'payment_confirmation_failed',
+        'Não foi possível confirmar o pagamento no momento',
+        error
+      )
+    );
   }
 };
 
@@ -553,10 +578,13 @@ exports.handleWebhook = async (req, res) => {
     res.json({ received: true });
   } catch (error) {
     logger.error(`❌ Erro ao processar webhook: ${error.message}`);
-    res.status(500).json({
-      error: 'webhook_processing_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'webhook_processing_failed',
+        'Falha ao processar webhook',
+        error
+      )
+    );
   }
 };
 
@@ -843,10 +871,13 @@ exports.cancelStripeSubscription = async (req, res) => {
 
   } catch (error) {
     logger.error(`❌ Erro em cancelStripeSubscription: ${error.message}`);
-    res.status(500).json({
-      error: 'cancellation_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'cancellation_failed',
+        'Não foi possível cancelar a assinatura no momento',
+        error
+      )
+    );
   }
 };
 
@@ -880,10 +911,13 @@ exports.createCustomerPortalSession = async (req, res) => {
 
   } catch (error) {
     logger.error(`❌ Erro em createCustomerPortalSession: ${error.message}`);
-    res.status(500).json({
-      error: 'portal_creation_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'portal_creation_failed',
+        'Não foi possível abrir o portal do cliente no momento',
+        error
+      )
+    );
   }
 };
 
@@ -913,9 +947,12 @@ exports.getStripeSubscriptionStatus = async (req, res) => {
 
   } catch (error) {
     logger.error(`❌ Erro em getStripeSubscriptionStatus: ${error.message}`);
-    res.status(500).json({
-      error: 'status_retrieval_failed',
-      message: error.message
-    });
+    res.status(500).json(
+      buildSafeErrorResponse(
+        'status_retrieval_failed',
+        'Não foi possível consultar o status da assinatura no momento',
+        error
+      )
+    );
   }
 };

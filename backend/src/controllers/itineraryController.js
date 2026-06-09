@@ -13,8 +13,8 @@ const cloudinary = require('../config/cloudinary');
  */
 const deletePhotosFromCloudinary = async (photos) => {
   if (!photos || photos.length === 0) return;
-  
-  console.log(`🗑️ Deletando ${photos.length} fotos do Cloudinary...`);
+
+  logger.debug(`Deletando ${photos.length} fotos do Cloudinary`);
   
   for (const photoUrl of photos) {
     try {
@@ -24,10 +24,10 @@ const deletePhotosFromCloudinary = async (photos) => {
       if (matches && matches[1]) {
         const publicId = `guia-aventureiro/${matches[1]}`;
         await cloudinary.uploader.destroy(publicId);
-        console.log(`✅ Foto deletada do Cloudinary: ${publicId}`);
+        logger.debug(`Foto deletada do Cloudinary: ${publicId}`);
       }
     } catch (error) {
-      console.error(`❌ Erro ao deletar foto do Cloudinary (${photoUrl}):`, error.message);
+      logger.error(`Erro ao deletar foto do Cloudinary (${photoUrl}):`, error.message);
       // Continua deletando outras fotos mesmo se uma falhar
     }
   }
@@ -111,7 +111,7 @@ exports.getItineraryById = async (req, res) => {
 
     res.json(itinerary);
   } catch (error) {
-    console.error('❌ Erro ao buscar roteiro:', error);
+    logger.error('Erro ao buscar roteiro:', error);
     res.status(500).json({ message: 'Erro ao buscar roteiro.', error: error.message });
   }
 };
@@ -238,9 +238,6 @@ exports.generateItineraryWithAI = async (req, res) => {
 // Atualizar roteiro
 exports.updateItinerary = async (req, res) => {
   try {
-    console.log('📝 Atualizando roteiro:', req.params.id);
-    console.log('📦 Dados recebidos:', JSON.stringify(req.body, null, 2));
-
     const itinerary = await Itinerary.findById(req.params.id);
 
     if (!itinerary) {
@@ -282,15 +279,14 @@ exports.updateItinerary = async (req, res) => {
       );
     }
 
-    console.log('✅ Roteiro atualizado:', itinerary._id);
-    console.log('📊 Status novo:', itinerary.status);
+    logger.debug(`Roteiro atualizado: ${itinerary._id} (${itinerary.status})`);
 
     res.json({
       message: 'Roteiro atualizado com sucesso.',
       itinerary,
     });
   } catch (error) {
-    console.error('❌ Erro ao atualizar roteiro:', error);
+    logger.error('Erro ao atualizar roteiro:', error);
     res.status(500).json({ message: 'Erro ao atualizar roteiro.', error: error.message });
   }
 };
@@ -434,27 +430,11 @@ exports.removeCollaborator = async (req, res) => {
 // Duplicar roteiro
 exports.duplicateItinerary = async (req, res) => {
   try {
-    console.log('\n========== INÍCIO DUPLICAÇÃO ==========');
-    console.log('📋 Duplicando roteiro:', req.params.id);
-    console.log('👤 User ID:', req.userId);
-    console.log('📊 req.subscription existe?', !!req.subscription);
-    
-    if (req.subscription) {
-      console.log('📊 ESTADO INICIAL DA SUBSCRIPTION:');
-      console.log('   - Plan:', req.subscription.plan);
-      console.log('   - Itineraries (current/limit):', req.subscription.usage.itineraries.current, '/', req.subscription.usage.itineraries.limit);
-      console.log('   - AI Generations (current/limit):', req.subscription.usage.aiGenerations.current, '/', req.subscription.usage.aiGenerations.limit);
-    }
-    
     const original = await Itinerary.findById(req.params.id);
 
     if (!original) {
-      console.log('❌ Roteiro não encontrado');
       return res.status(404).json({ message: 'Roteiro não encontrado.' });
     }
-
-    console.log('✅ Roteiro original encontrado:', original.title);
-    console.log('   - É duplicado?', original.title.includes('(cópia)'));
     
     const duplicateData = original.toObject();
     
@@ -476,46 +456,26 @@ exports.duplicateItinerary = async (req, res) => {
       lastEditedBy: req.userId,
     });
 
-    console.log('💾 Salvando duplicata...');
     await duplicate.save();
     
     // Incrementar contadores (slots ativos + criações mensais)
     if (req.subscription) {
-      console.log('📊 Incrementando contadores de uso...');
-      console.log('📊 ANTES - itineraries.current:', req.subscription.usage.itineraries.current);
-      console.log('📊 ANTES - aiGenerations.current:', req.subscription.usage.aiGenerations.current);
-      
       req.subscription.incrementUsage('itineraries');
       req.subscription.incrementUsage('aiGenerations');
-      
-      console.log('📊 DEPOIS - itineraries.current:', req.subscription.usage.itineraries.current);
-      console.log('📊 DEPOIS - aiGenerations.current:', req.subscription.usage.aiGenerations.current);
-      
-      const savedSub = await req.subscription.save();
-      console.log('💾 Subscription salva com sucesso');
-      console.log('📊 CONFIRMAÇÃO PÓS-SAVE:');
-      console.log('   - itineraries.current:', savedSub.usage.itineraries.current);
-      
-      // Verificar no banco se realmente foi salvo
-      const Subscription = require('../models/Subscription');
-      const freshSub = await Subscription.findOne({ user: req.userId });
-      console.log('📊 VERIFICAÇÃO NO BANCO (fresh query):');
-      console.log('   - itineraries.current:', freshSub.usage.itineraries.current);
-      console.log('   - aiGenerations.current:', freshSub.usage.aiGenerations.current);
+
+      await req.subscription.save();
     } else {
-      console.warn('⚠️ req.subscription não definido - contadores NÃO foram incrementados!');
+      logger.warn('req.subscription não definido durante duplicação de roteiro');
     }
-    
-    console.log('✅ Roteiro duplicado com sucesso:', duplicate._id);
-    console.log('========== FIM DUPLICAÇÃO ==========\n');
+
+    logger.debug(`Roteiro duplicado com sucesso: ${duplicate._id}`);
 
     res.status(201).json({
       message: 'Roteiro duplicado com sucesso.',
       itinerary: duplicate,
     });
   } catch (error) {
-    console.error('❌ Erro ao duplicar roteiro:', error);
-    console.error('Stack:', error.stack);
+    logger.error('Erro ao duplicar roteiro:', error);
     res.status(500).json({ message: 'Erro ao duplicar roteiro.', error: error.message });
   }
 };
