@@ -14,14 +14,14 @@ const logger = require('../utils/logger');
 exports.canCreateItinerary = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     // Se não tem subscription, criar uma Free
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     // Verificar limite de slots ativos
     if (subscription.usage.itineraries.current >= subscription.usage.itineraries.limit) {
       const plan = getPlan(subscription.plan);
@@ -34,15 +34,15 @@ exports.canCreateItinerary = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para criar mais roteiros',
           availablePlans: subscription.plan === 'free' ? ['premium'] : [],
-        }
+        },
       });
     }
-    
+
     // Verificar limite de criações mensais (aplica a criar, duplicar, gerar com IA)
     if (subscription.plan === 'free' && !subscription.canUseAI()) {
       const nextReset = new Date(subscription.usage.aiGenerations.lastReset);
       nextReset.setMonth(nextReset.getMonth() + 1);
-      
+
       return res.status(403).json({
         error: 'monthly_limit_reached',
         message: `Você atingiu o limite de ${subscription.usage.aiGenerations.limit} criações de roteiros neste mês`,
@@ -53,13 +53,15 @@ exports.canCreateItinerary = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para criar roteiros ilimitados',
           availablePlans: subscription.plan === 'free' ? ['premium'] : [],
-        }
+        },
       });
     }
-    
+
     // Adicionar subscription ao request para uso posterior
     req.subscription = subscription;
-    console.log(`✅ Middleware canCreateItinerary: subscription definida (plan: ${subscription.plan}, slots: ${subscription.usage.itineraries.current}/${subscription.usage.itineraries.limit}, criações: ${subscription.usage.aiGenerations.current}/${subscription.usage.aiGenerations.limit})`);
+    console.log(
+      `✅ Middleware canCreateItinerary: subscription definida (plan: ${subscription.plan}, slots: ${subscription.usage.itineraries.current}/${subscription.usage.itineraries.limit}, criações: ${subscription.usage.aiGenerations.current}/${subscription.usage.aiGenerations.limit})`
+    );
     next();
   } catch (error) {
     logger.error('Erro ao verificar limite de roteiros:', error);
@@ -73,13 +75,13 @@ exports.canCreateItinerary = async (req, res, next) => {
 exports.canUseAI = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     // Verificar se tem o recurso de IA
     if (subscription.plan === 'free' && !subscription.canUseAI()) {
       return res.status(403).json({
@@ -91,10 +93,10 @@ exports.canUseAI = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para ter criações ilimitadas',
           availablePlans: ['premium'],
-        }
+        },
       });
     }
-    
+
     req.subscription = subscription;
     next();
   } catch (error) {
@@ -111,17 +113,17 @@ exports.canUploadPhoto = async (req, res, next) => {
   try {
     const userId = req.userId;
     const itineraryId = req.body.itineraryId;
-    
+
     console.log('🔍 canUploadPhoto - userId:', userId);
     console.log('🔍 canUploadPhoto - itineraryId:', itineraryId);
     console.log('🔍 canUploadPhoto - req.body:', req.body);
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     // Plano Free não permite upload de fotos
     if (subscription.plan === 'free') {
       const plan = getPlan(subscription.plan);
@@ -132,27 +134,29 @@ exports.canUploadPhoto = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para fazer upload de fotos',
           availablePlans: ['premium'],
-        }
+        },
       });
     }
-    
+
     // Se enviou itineraryId, verificar limite POR ROTEIRO
     if (itineraryId) {
       const itinerary = await Itinerary.findById(itineraryId);
-      
+
       if (!itinerary) {
         return res.status(404).json({ message: 'Roteiro não encontrado' });
       }
-      
+
       // Verificar se o usuário é owner do roteiro
       if (itinerary.owner.toString() !== userId.toString()) {
-        return res.status(403).json({ message: 'Você não tem permissão para adicionar fotos a este roteiro' });
+        return res
+          .status(403)
+          .json({ message: 'Você não tem permissão para adicionar fotos a este roteiro' });
       }
-      
+
       const currentPhotos = itinerary.rating?.photos?.length || 0;
       const plan = getPlan(subscription.plan);
       const photoLimit = plan.limits.photos; // 20 para Premium
-      
+
       if (currentPhotos >= photoLimit) {
         return res.status(403).json({
           error: 'limit_reached',
@@ -161,20 +165,21 @@ exports.canUploadPhoto = async (req, res, next) => {
           limit: photoLimit,
           plan: subscription.plan,
           upgrade: {
-            message: subscription.plan === 'premium' 
-              ? 'Você atingiu o limite de fotos do plano Premium'
-              : 'Você atingiu o limite máximo de fotos',
+            message:
+              subscription.plan === 'premium'
+                ? 'Você atingiu o limite de fotos do plano Premium'
+                : 'Você atingiu o limite máximo de fotos',
             availablePlans: [],
-          }
+          },
         });
       }
-      
+
       console.log('✅ canUploadPhoto - req.itinerary setado:', itinerary._id);
       req.itinerary = itinerary; // Passar roteiro para o próximo middleware
     } else {
       console.log('⚠️ canUploadPhoto - Nenhum itineraryId fornecido');
     }
-    
+
     req.subscription = subscription;
     console.log('✅ canUploadPhoto - Chamando next()');
     next();
@@ -190,13 +195,13 @@ exports.canUploadPhoto = async (req, res, next) => {
 exports.canAddCollaborator = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     // Plano Free não permite colaboradores
     if (subscription.plan === 'free') {
       return res.status(403).json({
@@ -206,10 +211,10 @@ exports.canAddCollaborator = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para o Premium para liberar os recursos avançados',
           availablePlans: ['premium'],
-        }
+        },
       });
     }
-    
+
     req.subscription = subscription;
     next();
   } catch (error) {
@@ -224,13 +229,13 @@ exports.canAddCollaborator = async (req, res, next) => {
 exports.canShareItinerary = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     // Plano Free não permite compartilhamento público
     const plan = getPlan(subscription.plan);
     if (!plan.features.publicSharing) {
@@ -241,10 +246,10 @@ exports.canShareItinerary = async (req, res, next) => {
         upgrade: {
           message: 'Faça upgrade para o Premium e compartilhe seus roteiros com qualquer pessoa',
           availablePlans: ['premium'],
-        }
+        },
       });
     }
-    
+
     req.subscription = subscription;
     next();
   } catch (error) {
@@ -260,13 +265,13 @@ exports.requireFeature = (featureName) => {
   return async (req, res, next) => {
     try {
       const userId = req.userId;
-      
+
       let subscription = await Subscription.findOne({ user: userId });
-      
+
       if (!subscription) {
         subscription = await Subscription.createFreeSubscription(userId);
       }
-      
+
       if (!subscription.hasFeature(featureName)) {
         return res.status(403).json({
           error: 'feature_locked',
@@ -275,10 +280,10 @@ exports.requireFeature = (featureName) => {
           upgrade: {
             message: 'Faça upgrade para acessar este recurso',
             availablePlans: subscription.plan === 'free' ? ['premium'] : [],
-          }
+          },
         });
       }
-      
+
       req.subscription = subscription;
       next();
     } catch (error) {
@@ -313,13 +318,13 @@ exports.incrementUsage = (type) => {
 exports.attachSubscription = async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     let subscription = await Subscription.findOne({ user: userId });
-    
+
     if (!subscription) {
       subscription = await Subscription.createFreeSubscription(userId);
     }
-    
+
     req.subscription = subscription;
     next();
   } catch (error) {

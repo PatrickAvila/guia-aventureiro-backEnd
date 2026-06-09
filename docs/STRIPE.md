@@ -1,7 +1,9 @@
+<!-- markdownlint-disable -->
+
 # 💳 INTEGRAÇÃO STRIPE - Guia do Aventureiro
 
-**Status:** ✅ Implementado (Modo Test)  
-**Versão:** v1.0.7  
+**Status:** ✅ Implementado (Modo Test)
+**Versão:** v1.0.7
 **Data:** 24/02/2026
 
 ---
@@ -161,7 +163,7 @@ stripe listen --forward-to localhost:3000/api/subscriptions/webhook
      - `customer.subscription.updated`
      - `customer.subscription.deleted`
      - `invoice.payment_failed`
-4. Copie o **Webhook Signing Secret** (whsec_...)
+4. Copie o **Webhook Signing Secret** (whsec\_...)
 
 ### 5. Variáveis de Ambiente
 
@@ -227,13 +229,13 @@ node automation/user.js --email patrick@email.com --action check
 
 ### Cenários de Teste
 
-| Cenário | Comando | Resultado Esperado |
-|---------|---------|-------------------|
-| Criar checkout | `test-payment.js` | URL do Stripe Checkout |
-| Pagamento sucesso | Usar card 4242... | Upgrade para Premium |
-| Pagamento falha | Usar card 4000 0000 0000 0002 | Status `past_due` |
-| Cancelar imediato | `cancel-subscription.js --immediately` | Downgrade para Free |
-| Cancelar ao fim do período | `cancel-subscription.js` | Premium até fim do mês |
+| Cenário                    | Comando                                | Resultado Esperado     |
+| -------------------------- | -------------------------------------- | ---------------------- |
+| Criar checkout             | `test-payment.js`                      | URL do Stripe Checkout |
+| Pagamento sucesso          | Usar card 4242...                      | Upgrade para Premium   |
+| Pagamento falha            | Usar card 4000 0000 0000 0002          | Status `past_due`      |
+| Cancelar imediato          | `cancel-subscription.js --immediately` | Downgrade para Free    |
+| Cancelar ao fim do período | `cancel-subscription.js`               | Premium até fim do mês |
 
 ---
 
@@ -241,12 +243,12 @@ node automation/user.js --email patrick@email.com --action check
 
 ### Eventos Processados
 
-| Evento | Quando? | Ação |
-|--------|---------|------|
-| `checkout.session.completed` | Pagamento confirmado | Upgrade para Premium |
-| `customer.subscription.updated` | Assinatura atualizada | Atualizar status/datas |
-| `customer.subscription.deleted` | Assinatura cancelada | Downgrade para Free |
-| `invoice.payment_failed` | Pagamento falhou | Atualizar status `past_due` |
+| Evento                          | Quando?               | Ação                        |
+| ------------------------------- | --------------------- | --------------------------- |
+| `checkout.session.completed`    | Pagamento confirmado  | Upgrade para Premium        |
+| `customer.subscription.updated` | Assinatura atualizada | Atualizar status/datas      |
+| `customer.subscription.deleted` | Assinatura cancelada  | Downgrade para Free         |
+| `invoice.payment_failed`        | Pagamento falhou      | Atualizar status `past_due` |
 
 ### Idempotência
 
@@ -285,11 +287,12 @@ const event = stripe.webhooks.constructEvent(
 ### PricingScreen
 
 **Recursos:**
+
 - ✅ Comparação visual FREE vs PREMIUM
 - ✅ Badge "Mais Popular" no Premium
 - ✅ FAQ colapsável (4 perguntas)
 - ✅ Botão "Assinar Premium" (abre Stripe Checkout)
-- ✅ Botão "Gerenciar Assinatura" (somente Premium)  
+- ✅ Botão "Gerenciar Assinatura" (somente Premium)
 - ✅ Loading states (checkout, portal)
 - ✅ Mensagens de erro amigáveis
 
@@ -312,27 +315,27 @@ const event = stripe.webhooks.constructEvent(
 
 ### ✅ Implementado
 
-1. **Webhook Signature Verification**  
+1. **Webhook Signature Verification**
    - Valida que webhook veio realmente do Stripe
    - Previne webhooks falsos/maliciosos
 
-2. **Rate Limiting**  
+2. **Rate Limiting**
    - Checkout: 5 tentativas / 15 minutos
    - Previne abuso e teste de cartões roubados
 
-3. **Idempotência**  
+3. **Idempotência**
    - Eventos processados apenas 1 vez
    - Previne duplicação de upgrades
 
-4. **Validações de Negócio**  
+4. **Validações de Negócio**
    - Não permitir upgrade se já é Premium
    - Validar ownership antes de cancelar
 
-5. **HTTPS Obrigatório**  
+5. **HTTPS Obrigatório**
    - Webhooks só aceitam HTTPS (produção)
    - Render.com já fornece SSL
 
-6. **Logs Detalhados**  
+6. **Logs Detalhados**
    - Winston logger com timestamps
    - Auditoria completa de todas as operações
 
@@ -361,12 +364,12 @@ grep "webhook" backend/logs/combined.log
 
 ### Métricas Importantes
 
-| Métrica | Onde Ver | Meta |
-|---------|----------|------|
-| Conversion Rate | Analytics futuro | 5-10% |
-| Churn Rate | Stripe Dashboard | <10% |
-| MRR | Stripe Dashboard | Crescente |
-| Failed Payments | Stripe Dashboard | <5% |
+| Métrica         | Onde Ver         | Meta      |
+| --------------- | ---------------- | --------- |
+| Conversion Rate | Analytics futuro | 5-10%     |
+| Churn Rate      | Stripe Dashboard | <10%      |
+| MRR             | Stripe Dashboard | Crescente |
+| Failed Payments | Stripe Dashboard | <5%       |
 
 ---
 
@@ -406,12 +409,14 @@ grep "webhook" backend/logs/combined.log
 ### Problema: Webhook não está sendo chamado
 
 **Possíveis causas:**
+
 - URL do webhook incorreta no Stripe Dashboard
 - Backend não está rodando
 - Stripe CLI não está fowarding (localhost)
 - Firewall bloqueando
 
 **Solução:**
+
 ```bash
 # Verificar se endpoint está acessível
 curl -X POST https://guia-aventureiro-backend.onrender.com/api/subscriptions/webhook
@@ -426,11 +431,13 @@ stripe events resend evt_xxxxxxxxxxxxx
 ### Problema: Upgrade não acontece após pagamento
 
 **Possíveis causas:**
+
 - Webhook falhou (ver logs)
 - userId não está no metadata
 - Subscription já é Premium
 
 **Solução:**
+
 ```bash
 # Ver logs do backend
 tail -f backend/logs/error.log
@@ -445,10 +452,12 @@ node automation/sync-stripe.js --email patrick@email.com
 ### Problema: Erro "invalid_signature" no webhook
 
 **Causa:**
+
 - `STRIPE_WEBHOOK_SECRET` incorreto
 - Webhook configurado com secret diferente
 
 **Solução:**
+
 ```bash
 # Gerar novo webhook secret
 stripe listen --print-secret
@@ -533,6 +542,6 @@ docs/
 
 ---
 
-**Última atualização:** 24/02/2026  
-**Maintainer:** Patrick Avila  
+**Última atualização:** 24/02/2026
+**Maintainer:** Patrick Avila
 **Status:** ✅ Pronto para Staging

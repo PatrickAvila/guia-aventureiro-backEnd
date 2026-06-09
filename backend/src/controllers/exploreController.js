@@ -93,11 +93,8 @@ exports.getPublicItineraries = async (req, res, next) => {
 
     // Incrementar visualizações
     if (itineraries.length > 0) {
-      const ids = itineraries.map(i => i._id);
-      await Itinerary.updateMany(
-        { _id: { $in: ids } },
-        { $inc: { views: 1 } }
-      );
+      const ids = itineraries.map((i) => i._id);
+      await Itinerary.updateMany({ _id: { $in: ids } }, { $inc: { views: 1 } });
     }
 
     const pagination = {
@@ -203,7 +200,7 @@ exports.toggleLike = async (req, res, next) => {
     }
 
     const likedIndex = itinerary.likes?.indexOf(userId) ?? -1;
-    
+
     if (likedIndex > -1) {
       // Remover like
       itinerary.likes.splice(likedIndex, 1);
@@ -243,7 +240,7 @@ exports.toggleSave = async (req, res, next) => {
     if (!user.savedItineraries) user.savedItineraries = [];
 
     const savedIndex = user.savedItineraries.indexOf(id);
-    
+
     if (savedIndex > -1) {
       // Remover dos salvos
       user.savedItineraries.splice(savedIndex, 1);
@@ -277,7 +274,10 @@ exports.getSavedItineraries = async (req, res, next) => {
 
     const user = await User.findById(userId);
     if (!user.savedItineraries || user.savedItineraries.length === 0) {
-      return res.json({ itineraries: [], pagination: { total: 0, page, limit, pages: 0, hasNext: false, hasPrev: false } });
+      return res.json({
+        itineraries: [],
+        pagination: { total: 0, page, limit, pages: 0, hasNext: false, hasPrev: false },
+      });
     }
 
     const total = user.savedItineraries.length;

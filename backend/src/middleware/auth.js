@@ -68,7 +68,7 @@ const optionalAuth = async (req, res, next) => {
   } catch (error) {
     // Ignorar erros de autenticação - continuar sem autenticação
   }
-  
+
   next();
 };
 

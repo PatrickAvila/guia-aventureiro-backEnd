@@ -15,7 +15,7 @@ const deletePhotosFromCloudinary = async (photos) => {
   if (!photos || photos.length === 0) return;
 
   logger.debug(`Deletando ${photos.length} fotos do Cloudinary`);
-  
+
   for (const photoUrl of photos) {
     try {
       // Extrair public_id da URL do Cloudinary
@@ -43,10 +43,7 @@ exports.getUserItineraries = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const query = {
-      $or: [
-        { owner: req.userId },
-        { 'collaborators.user': req.userId },
-      ],
+      $or: [{ owner: req.userId }, { 'collaborators.user': req.userId }],
     };
 
     const total = await Itinerary.countDocuments(query);
@@ -82,15 +79,15 @@ exports.getUserItineraries = async (req, res) => {
 exports.getItineraryById = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Em desenvolvimento, retornar 404 para IDs mockados (cliente usa dados locais)
     if (process.env.NODE_ENV !== 'production' && id.startsWith('mock-')) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: 'Roteiro mockado - use dados locais no cliente.',
-        isMock: true 
+        isMock: true,
       });
     }
-    
+
     const itinerary = await Itinerary.findById(id)
       .populate('owner', 'name avatar email')
       .populate('collaborators.user', 'name avatar email');
@@ -101,9 +98,11 @@ exports.getItineraryById = async (req, res) => {
 
     // Verificar permissão
     const isOwner = itinerary.owner && itinerary.owner._id.toString() === req.userId.toString();
-    const isCollaborator = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user && collab.user._id.toString() === req.userId.toString()
-    );
+    const isCollaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.some(
+        (collab) => collab.user && collab.user._id.toString() === req.userId.toString()
+      );
 
     if (!isOwner && !isCollaborator && !itinerary.isPublic) {
       return res.status(403).json({ message: 'Você não tem permissão para acessar este roteiro.' });
@@ -135,7 +134,7 @@ exports.createItinerary = async (req, res) => {
     }
 
     // Verificar conquistas (em background)
-    checkAndUnlockAchievements(req.userId).catch(err => 
+    checkAndUnlockAchievements(req.userId).catch((err) =>
       logger.error('Erro ao verificar conquistas:', err)
     );
 
@@ -195,7 +194,7 @@ exports.generateItineraryWithAI = async (req, res) => {
         currency: budget?.currency || 'BRL',
       },
       preferences: preferences || {},
-      days: aiResult.days.map(day => {
+      days: aiResult.days.map((day) => {
         const dayDate = new Date(startDate);
         dayDate.setDate(dayDate.getDate() + (day.dayNumber - 1));
         return {
@@ -246,9 +245,9 @@ exports.updateItinerary = async (req, res) => {
 
     // Verificar permissão
     const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
-    const collaborator = itinerary.collaborators && itinerary.collaborators.find(
-      collab => collab.user.toString() === req.userId.toString()
-    );
+    const collaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.find((collab) => collab.user.toString() === req.userId.toString());
 
     // Permitir editar se: é owner, colaborador com permissão, OU roteiro público
     if (!isOwner && (!collaborator || collaborator.permission !== 'edit') && !itinerary.isPublic) {
@@ -257,11 +256,19 @@ exports.updateItinerary = async (req, res) => {
 
     // Atualizar campos permitidos
     const allowedUpdates = [
-      'title', 'destination', 'startDate', 'endDate', 'budget',
-      'preferences', 'days', 'status', 'isPublic', 'rating'
+      'title',
+      'destination',
+      'startDate',
+      'endDate',
+      'budget',
+      'preferences',
+      'days',
+      'status',
+      'isPublic',
+      'rating',
     ];
 
-    allowedUpdates.forEach(field => {
+    allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
         itinerary[field] = req.body[field];
       }
@@ -274,7 +281,7 @@ exports.updateItinerary = async (req, res) => {
 
     // Verificar conquistas se status mudou para concluído
     if (req.body.status === 'concluido') {
-      checkAndUnlockAchievements(itinerary.owner).catch(err => 
+      checkAndUnlockAchievements(itinerary.owner).catch((err) =>
         logger.error('Erro ao verificar conquistas:', err)
       );
     }
@@ -303,7 +310,7 @@ exports.deleteItinerary = async (req, res) => {
     // Apenas o dono pode deletar (ou roteiro público sem owner)
     const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
     const isPublicWithoutOwner = !itinerary.owner && itinerary.isPublic;
-    
+
     if (!isOwner && !isPublicWithoutOwner) {
       return res.status(403).json({ message: 'Apenas o dono pode deletar este roteiro.' });
     }
@@ -320,19 +327,25 @@ exports.deleteItinerary = async (req, res) => {
       const subscription = await Subscription.findOne({ user: req.userId });
       if (subscription) {
         // Sempre decrementa o contador de roteiros
-        subscription.usage.itineraries.current = Math.max(0, subscription.usage.itineraries.current - 1);
-        
+        subscription.usage.itineraries.current = Math.max(
+          0,
+          subscription.usage.itineraries.current - 1
+        );
+
         // Se foi gerado com IA, decrementa também o contador de IA
         if (itinerary.generatedByAI) {
-          subscription.usage.aiGenerations.current = Math.max(0, subscription.usage.aiGenerations.current - 1);
+          subscription.usage.aiGenerations.current = Math.max(
+            0,
+            subscription.usage.aiGenerations.current - 1
+          );
         }
-        
+
         await subscription.save();
       }
     }
 
     // Atualizar conquistas após exclusão
-    checkAndUnlockAchievements(req.userId).catch(err => {
+    checkAndUnlockAchievements(req.userId).catch((err) => {
       if (typeof logger !== 'undefined') logger.error('Erro ao verificar conquistas:', err);
     });
 
@@ -365,13 +378,15 @@ exports.addCollaborator = async (req, res) => {
 
     // Verificar se o usuário é o próprio dono
     if (user._id.toString() === itinerary.owner.toString()) {
-      return res.status(400).json({ message: 'Você não pode adicionar a si mesmo como colaborador.' });
+      return res
+        .status(400)
+        .json({ message: 'Você não pode adicionar a si mesmo como colaborador.' });
     }
 
     // Verificar se já é colaborador
-    const isAlreadyCollaborator = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user.toString() === user._id.toString()
-    );
+    const isAlreadyCollaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.some((collab) => collab.user.toString() === user._id.toString());
 
     if (isAlreadyCollaborator) {
       return res.status(400).json({ message: 'Usuário já é colaborador deste roteiro.' });
@@ -409,17 +424,21 @@ exports.removeCollaborator = async (req, res) => {
 
     // Apenas o dono pode remover outros, mas colaborador pode sair (remover a si mesmo)
     if (!isOwner && !isSelfRemoval) {
-      return res.status(403).json({ message: 'Você não tem permissão para remover este colaborador.' });
+      return res
+        .status(403)
+        .json({ message: 'Você não tem permissão para remover este colaborador.' });
     }
 
     itinerary.collaborators = (itinerary.collaborators || []).filter(
-      collab => collab.user.toString() !== collaboratorId
+      (collab) => collab.user.toString() !== collaboratorId
     );
 
     await itinerary.save();
 
     res.json({
-      message: isSelfRemoval ? 'Você saiu do roteiro com sucesso.' : 'Colaborador removido com sucesso.',
+      message: isSelfRemoval
+        ? 'Você saiu do roteiro com sucesso.'
+        : 'Colaborador removido com sucesso.',
       itinerary,
     });
   } catch (error) {
@@ -435,9 +454,9 @@ exports.duplicateItinerary = async (req, res) => {
     if (!original) {
       return res.status(404).json({ message: 'Roteiro não encontrado.' });
     }
-    
+
     const duplicateData = original.toObject();
-    
+
     // Remover campos que não devem ser duplicados
     delete duplicateData._id;
     delete duplicateData.createdAt;
@@ -445,7 +464,7 @@ exports.duplicateItinerary = async (req, res) => {
     delete duplicateData.__v;
     delete duplicateData.publicLink; // Campo único
     delete duplicateData.rating; // Não duplicar avaliação
-    
+
     const duplicate = new Itinerary({
       ...duplicateData,
       owner: req.userId,
@@ -457,7 +476,7 @@ exports.duplicateItinerary = async (req, res) => {
     });
 
     await duplicate.save();
-    
+
     // Incrementar contadores (slots ativos + criações mensais)
     if (req.subscription) {
       req.subscription.incrementUsage('itineraries');

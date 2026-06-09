@@ -32,6 +32,7 @@ O **Guia do Aventureiro** é um aplicativo mobile que utiliza Inteligência Arti
 ## 🏗️ Arquitetura
 
 ### **Backend (Node.js + Express)**
+
 ```
 backend/
 ├── src/
@@ -50,6 +51,7 @@ backend/
 ```
 
 ### **Mobile (React Native + Expo)**
+
 ```
 mobile/
 ├── src/
@@ -153,6 +155,7 @@ npm run start:prod
 ```
 
 **Encontrar seu IP local:**
+
 ```bash
 # Windows
 ipconfig
@@ -197,6 +200,7 @@ CLOUDINARY_API_SECRET=seu_api_secret
 ## 📚 API Documentation
 
 ### **Base URL**
+
 ```
 http://localhost:3000/api
 ```
@@ -204,6 +208,7 @@ http://localhost:3000/api
 ### **Principais Endpoints**
 
 #### **Autenticação**
+
 ```http
 POST   /api/auth/signup          # Cadastro
 POST   /api/auth/login           # Login
@@ -212,6 +217,7 @@ GET    /api/auth/profile         # Dados do usuário autenticado
 ```
 
 #### **Roteiros (Itinerários)**
+
 ```http
 GET    /api/roteiros             # Listar roteiros (paginado)
 POST   /api/roteiros             # Criar roteiro
@@ -221,11 +227,13 @@ DELETE /api/roteiros/:id         # Deletar roteiro
 ```
 
 #### **IA (Geração de Roteiros)**
+
 ```http
 POST   /api/roteiros/generate    # Gerar roteiro com IA
 ```
 
 #### **Explorar**
+
 ```http
 GET    /api/explore/itineraries        # Feed de roteiros públicos
 GET    /api/explore/featured           # Roteiros em destaque
@@ -235,18 +243,21 @@ POST   /api/explore/save/:id           # Salvar roteiro
 ```
 
 #### **Avaliações**
+
 ```http
 POST   /api/ratings/:itineraryId # Criar avaliação
 GET    /api/ratings/:itineraryId # Listar avaliações
 ```
 
 #### **Conquistas**
+
 ```http
 GET    /api/achievements         # Listar conquistas do usuário
 GET    /api/achievements/stats   # Estatísticas
 ```
 
 📖 **Documentação completa:**
+
 - [API.md](API.md) - Documentação completa da API
 - [docs/INDEX.md](docs/INDEX.md) - Hub central da documentação
 - [docs/STRIPE.md](docs/STRIPE.md) - Sistema de assinatura e pagamentos
@@ -258,6 +269,7 @@ GET    /api/achievements/stats   # Estatísticas
 ## 🛠️ Stack Tecnológica
 
 ### **Backend**
+
 - Node.js 20+
 - Express.js
 - MongoDB + Mongoose
@@ -268,6 +280,7 @@ GET    /api/achievements/stats   # Estatísticas
 - Winston (logs)
 
 ### **Mobile**
+
 - React Native
 - Expo (SDK 50+)
 - TypeScript
@@ -277,6 +290,7 @@ GET    /api/achievements/stats   # Estatísticas
 - Sistema de Tutorial Híbrido (onboarding screens + tooltips contextuais)
 
 ### **DevOps**
+
 - Render (backend hosting)
 - MongoDB Atlas (database)
 - Cloudinary (imagens)
@@ -305,11 +319,13 @@ GET    /api/achievements/stats   # Estatísticas
 📋 [ROADMAP.md](ROADMAP.md) - Planejamento completo
 
 **Versão 1.1 (30 dias):**
+
 - Orçamento detalhado com gráficos
 - Mapa interativo
 - Notificações push
 
 **Versão 2.0 (90 dias):**
+
 - Plano Premium (R$ 9,90/mês)
 - Afiliações (Booking, Decolar)
 - Features avançadas
@@ -333,6 +349,7 @@ npm run test:coverage     # Cobertura de código
 ```
 
 **Estatísticas:**
+
 - ✅ **237 testes** em 16 suites
 - ✅ **223 passando** (94.1%)
 - ⏭️ **14 skipped** (funcionalidades não implementadas)
@@ -380,15 +397,16 @@ eas build --platform android
 
 ## 💰 Custos (Início)
 
-| Serviço | Custo | Limite Grátis |
-|---------|-------|---------------|
-| MongoDB Atlas | **Grátis** | 512MB |
-| Cloudinary | **Grátis** | 25GB/mês |
-| Groq AI | **Grátis** | 14.400 req/dia |
-| Render | **Grátis** | 750h/mês |
-| **TOTAL** | **R$ 0/mês** | Até ~1.000 usuários |
+| Serviço       | Custo        | Limite Grátis       |
+| ------------- | ------------ | ------------------- |
+| MongoDB Atlas | **Grátis**   | 512MB               |
+| Cloudinary    | **Grátis**   | 25GB/mês            |
+| Groq AI       | **Grátis**   | 14.400 req/dia      |
+| Render        | **Grátis**   | 750h/mês            |
+| **TOTAL**     | **R$ 0/mês** | Até ~1.000 usuários |
 
 **Contas pagas (futuro):**
+
 - Apple Developer: R$ 499/ano (iOS obrigatório)
 - Google Play: R$ 125 (única vez, Android)
 
@@ -424,6 +442,7 @@ Contribuições são bem-vindas! Por favor:
 ## 📝 Changelog
 
 ### v1.0.7 (24/02/2026)
+
 - 💳 **Stripe Integration** completa e funcional
 - ✅ Checkout Stripe (pagamento seguro via browser)
 - ✅ Webhooks com verificação de assinatura (segurança)
@@ -436,6 +455,7 @@ Contribuições são bem-vindas! Por favor:
 - 🎯 Pronto para staging (modo test OK)
 
 ### v1.0.6 (19/02/2026)
+
 - 🧪 **237 testes** implementados e 94.1% passando
 - ✅ Sistema de testes completo (16 suites, 100% independentes)
 - 🔧 Correções no backend (colaboradores, perfil, IA)
@@ -445,6 +465,7 @@ Contribuições são bem-vindas! Por favor:
 - 🐛 Bugs corrigidos: self-removal, owner validation, rate limiting em testes
 
 ### v1.0.5 (11/02/2026)
+
 - 🎓 Sistema de tutorial híbrido implementado
 - ✅ 5 tooltips contextuais inteligentes
 - ✅ Componente Tooltip reutilizável com animações
@@ -452,6 +473,7 @@ Contribuições são bem-vindas! Por favor:
 - ✅ Botão "Rever Tutorial" com reset completo
 
 ### v1.0.0 (29/12/2025)
+
 - 🎉 MVP completo com 20 features
 - ✅ IA real com Groq (Llama 3.3)
 - ✅ Sistema de avaliações e compartilhamento

@@ -24,7 +24,7 @@ const buildSafeErrorResponse = (errorCode, message, error) => {
  */
 exports.getPlans = async (req, res, next) => {
   try {
-    const plans = Object.values(PLANS).map(plan => ({
+    const plans = Object.values(PLANS).map((plan) => ({
       ...plan,
       savings: getYearlySavings(plan.id),
     }));
@@ -57,7 +57,7 @@ exports.getMySubscription = async (req, res, next) => {
       subscription: {
         ...subscription.toObject(),
         planDetails: plan,
-      }
+      },
     });
   } catch (error) {
     logger.error('Erro ao buscar subscription:', error);
@@ -86,28 +86,44 @@ exports.getUsage = async (req, res, next) => {
       itineraries: {
         current: subscription.usage.itineraries.current,
         limit: subscription.usage.itineraries.limit,
-        percentage: subscription.usage.itineraries.limit > 0
-          ? Math.round((subscription.usage.itineraries.current / subscription.usage.itineraries.limit) * 100)
-          : 0,
+        percentage:
+          subscription.usage.itineraries.limit > 0
+            ? Math.round(
+                (subscription.usage.itineraries.current / subscription.usage.itineraries.limit) *
+                  100
+              )
+            : 0,
         unlimited: subscription.plan === 'premium' && subscription.usage.itineraries.limit >= 50,
       },
       aiGenerations: {
         current: subscription.usage.aiGenerations.current,
         limit: subscription.usage.aiGenerations.limit,
-        percentage: subscription.plan === 'premium' ? 0 :
-          (subscription.usage.aiGenerations.limit > 0
-            ? Math.round((subscription.usage.aiGenerations.current / subscription.usage.aiGenerations.limit) * 100)
-            : 0),
+        percentage:
+          subscription.plan === 'premium'
+            ? 0
+            : subscription.usage.aiGenerations.limit > 0
+              ? Math.round(
+                  (subscription.usage.aiGenerations.current /
+                    subscription.usage.aiGenerations.limit) *
+                    100
+                )
+              : 0,
         unlimited: subscription.plan === 'premium',
-        resetsAt: new Date(subscription.usage.aiGenerations.lastReset.getFullYear(),
-                          subscription.usage.aiGenerations.lastReset.getMonth() + 1, 1),
+        resetsAt: new Date(
+          subscription.usage.aiGenerations.lastReset.getFullYear(),
+          subscription.usage.aiGenerations.lastReset.getMonth() + 1,
+          1
+        ),
       },
       photos: {
         current: subscription.usage.photos.current,
         limit: subscription.usage.photos.limit,
-        percentage: subscription.usage.photos.limit > 0
-          ? Math.round((subscription.usage.photos.current / subscription.usage.photos.limit) * 100)
-          : 0,
+        percentage:
+          subscription.usage.photos.limit > 0
+            ? Math.round(
+                (subscription.usage.photos.current / subscription.usage.photos.limit) * 100
+              )
+            : 0,
       },
     };
 
@@ -133,7 +149,7 @@ exports.initiateUpgrade = async (req, res, next) => {
       return res.status(410).json({
         error: 'deprecated_upgrade_flow',
         message: 'Fluxo temporário desativado em produção. Use Stripe Checkout.',
-        action: 'POST /api/checkout/create-session'
+        action: 'POST /api/checkout/create-session',
       });
     }
 
@@ -176,7 +192,7 @@ exports.initiateUpgrade = async (req, res, next) => {
       temporaryUpgrade: {
         message: 'Em produção, isso redirecionaria para checkout do Stripe',
         action: 'POST /api/subscriptions/confirm-upgrade',
-      }
+      },
     });
   } catch (error) {
     logger.error('Erro ao iniciar upgrade:', error);
@@ -361,7 +377,7 @@ exports.createCheckoutSession = async (req, res) => {
     if (subscription.plan === 'premium' && subscription.paymentStatus === 'active') {
       return res.status(400).json({
         error: 'already_premium',
-        message: 'Você já possui o plano Premium ativo'
+        message: 'Você já possui o plano Premium ativo',
       });
     }
 
@@ -377,14 +393,14 @@ exports.createCheckoutSession = async (req, res) => {
     if (!baseUrl) {
       return res.status(500).json({
         error: 'stripe_not_configured',
-        message: 'STRIPE_REDIRECT_BASE_URL não configurada'
+        message: 'STRIPE_REDIRECT_BASE_URL não configurada',
       });
     }
 
     if (!baseUrl.startsWith('https://')) {
       return res.status(500).json({
         error: 'stripe_not_configured',
-        message: 'STRIPE_REDIRECT_BASE_URL deve começar com https://'
+        message: 'STRIPE_REDIRECT_BASE_URL deve começar com https://',
       });
     }
 
@@ -421,7 +437,7 @@ exports.createCheckoutSession = async (req, res) => {
 
     const response = {
       error: 'checkout_creation_failed',
-      message: 'Erro ao criar checkout'
+      message: 'Erro ao criar checkout',
     };
 
     if (process.env.NODE_ENV !== 'production') {
@@ -463,13 +479,15 @@ exports.createSetupIntent = async (req, res) => {
       });
     }
 
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'setup_intent_creation_failed',
-        'Não foi possível iniciar a configuração de pagamento no momento',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse(
+          'setup_intent_creation_failed',
+          'Não foi possível iniciar a configuração de pagamento no momento',
+          error
+        )
+      );
   }
 };
 
@@ -506,13 +524,15 @@ exports.confirmPayment = async (req, res) => {
   } catch (error) {
     logger.error(`❌ Erro em confirmPayment: ${error.message}`);
 
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'payment_confirmation_failed',
-        'Não foi possível confirmar o pagamento no momento',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse(
+          'payment_confirmation_failed',
+          'Não foi possível confirmar o pagamento no momento',
+          error
+        )
+      );
   }
 };
 
@@ -578,13 +598,11 @@ exports.handleWebhook = async (req, res) => {
     res.json({ received: true });
   } catch (error) {
     logger.error(`❌ Erro ao processar webhook: ${error.message}`);
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'webhook_processing_failed',
-        'Falha ao processar webhook',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse('webhook_processing_failed', 'Falha ao processar webhook', error)
+      );
   }
 };
 
@@ -599,7 +617,9 @@ const handleSubscriptionCreated = async (subscription) => {
 
     // Se não tem userId no metadata, buscar via Customer
     if (!userId) {
-      logger.info('⚠️  userId não encontrado no metadata da subscription, buscando via customer...');
+      logger.info(
+        '⚠️  userId não encontrado no metadata da subscription, buscando via customer...'
+      );
 
       if (!subscription.customer) {
         logger.warn('⚠️  Subscription sem customer - pulando processamento');
@@ -614,7 +634,9 @@ const handleSubscriptionCreated = async (subscription) => {
       } else {
         // Buscar no banco pelo stripeCustomerId
         const Subscription = require('../models/Subscription');
-        const userSubscription = await Subscription.findOne({ stripeCustomerId: subscription.customer });
+        const userSubscription = await Subscription.findOne({
+          stripeCustomerId: subscription.customer,
+        });
 
         if (userSubscription) {
           userId = userSubscription.user.toString();
@@ -631,7 +653,6 @@ const handleSubscriptionCreated = async (subscription) => {
     await stripeService.upgradeUserToPremium(userId, subscription);
 
     logger.info(`✅ Upgrade para Premium concluído: user ${userId}`);
-
   } catch (error) {
     logger.error(`❌ Erro em handleSubscriptionCreated: ${error.message}`);
     throw error;
@@ -669,7 +690,9 @@ const handleCheckoutCompleted = async (session) => {
         if (subscription) {
           userId = subscription.user.toString();
         } else {
-          throw new Error('User ID não encontrado (nem no session.metadata, nem no customer, nem no banco)');
+          throw new Error(
+            'User ID não encontrado (nem no session.metadata, nem no customer, nem no banco)'
+          );
         }
       }
     }
@@ -687,7 +710,6 @@ const handleCheckoutCompleted = async (session) => {
 
     // TODO: Enviar email de boas-vindas
     // TODO: Notificação push
-
   } catch (error) {
     logger.error(`❌ Erro em handleCheckoutCompleted: ${error.message}`);
     throw error;
@@ -710,7 +732,9 @@ const handleSubscriptionUpdated = async (subscription) => {
 
     // Se foi cancelada mas ainda está ativa (cancel_at_period_end)
     if (subscription.cancel_at_period_end) {
-      logger.info(`⏰ Subscription ${subscription.id} será cancelada em ${new Date(subscription.cancel_at * 1000)}`);
+      logger.info(
+        `⏰ Subscription ${subscription.id} será cancelada em ${new Date(subscription.cancel_at * 1000)}`
+      );
 
       const userSubscription = await Subscription.findOne({ user: userId });
       if (userSubscription) {
@@ -731,7 +755,6 @@ const handleSubscriptionUpdated = async (subscription) => {
       logger.warn(`⚠️  Pagamento atrasado: user ${userId}`);
       // TODO: Enviar email de cobrança
     }
-
   } catch (error) {
     logger.error(`❌ Erro em handleSubscriptionUpdated: ${error.message}`);
     throw error;
@@ -759,7 +782,6 @@ const handleSubscriptionDeleted = async (subscription) => {
 
     // TODO: Enviar email de feedback
     // TODO: Notificação push
-
   } catch (error) {
     logger.error(`❌ Erro em handleSubscriptionDeleted: ${error.message}`);
     throw error;
@@ -775,7 +797,9 @@ const handlePaymentSucceeded = async (invoice) => {
     const customerId = invoice.customer;
     const subscriptionId = invoice.subscription;
 
-    logger.info(`✅ Pagamento bem-sucedido para customer ${customerId}, subscription ${subscriptionId}`);
+    logger.info(
+      `✅ Pagamento bem-sucedido para customer ${customerId}, subscription ${subscriptionId}`
+    );
 
     // Buscar usuário pelo Customer ID
     const subscription = await Subscription.findOne({ stripeCustomerId: customerId });
@@ -792,7 +816,6 @@ const handlePaymentSucceeded = async (invoice) => {
 
       logger.info(`✅ Status atualizado: user ${subscription.user} -> active`);
     }
-
   } catch (error) {
     logger.error(`❌ Erro em handlePaymentSucceeded: ${error.message}`);
     throw error;
@@ -819,7 +842,6 @@ const handlePaymentFailed = async (invoice) => {
 
       // TODO: Enviar email de notificação
     }
-
   } catch (error) {
     logger.error(`❌ Erro em handlePaymentFailed: ${error.message}`);
     throw error;
@@ -843,7 +865,7 @@ exports.cancelStripeSubscription = async (req, res) => {
     if (!subscription.stripeSubscriptionId) {
       return res.status(400).json({
         error: 'no_active_subscription',
-        message: 'Nenhuma assinatura ativa encontrada'
+        message: 'Nenhuma assinatura ativa encontrada',
       });
     }
 
@@ -868,16 +890,17 @@ exports.cancelStripeSubscription = async (req, res) => {
         : 'Assinatura será cancelada ao fim do período de cobrança',
       endsAt: subscription.renewsAt,
     });
-
   } catch (error) {
     logger.error(`❌ Erro em cancelStripeSubscription: ${error.message}`);
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'cancellation_failed',
-        'Não foi possível cancelar a assinatura no momento',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse(
+          'cancellation_failed',
+          'Não foi possível cancelar a assinatura no momento',
+          error
+        )
+      );
   }
 };
 
@@ -893,7 +916,7 @@ exports.createCustomerPortalSession = async (req, res) => {
     if (!subscription || !subscription.stripeCustomerId) {
       return res.status(404).json({
         error: 'no_stripe_customer',
-        message: 'Cliente Stripe não encontrado'
+        message: 'Cliente Stripe não encontrado',
       });
     }
 
@@ -908,16 +931,17 @@ exports.createCustomerPortalSession = async (req, res) => {
     logger.info(`✅ Customer Portal criado para user ${userId}`);
 
     res.json({ url });
-
   } catch (error) {
     logger.error(`❌ Erro em createCustomerPortalSession: ${error.message}`);
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'portal_creation_failed',
-        'Não foi possível abrir o portal do cliente no momento',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse(
+          'portal_creation_failed',
+          'Não foi possível abrir o portal do cliente no momento',
+          error
+        )
+      );
   }
 };
 
@@ -944,15 +968,16 @@ exports.getStripeSubscriptionStatus = async (req, res) => {
       usage: subscription.usage,
       features: subscription.features,
     });
-
   } catch (error) {
     logger.error(`❌ Erro em getStripeSubscriptionStatus: ${error.message}`);
-    res.status(500).json(
-      buildSafeErrorResponse(
-        'status_retrieval_failed',
-        'Não foi possível consultar o status da assinatura no momento',
-        error
-      )
-    );
+    res
+      .status(500)
+      .json(
+        buildSafeErrorResponse(
+          'status_retrieval_failed',
+          'Não foi possível consultar o status da assinatura no momento',
+          error
+        )
+      );
   }
 };

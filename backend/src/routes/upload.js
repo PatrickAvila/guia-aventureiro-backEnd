@@ -40,15 +40,12 @@ router.post('/', auth, upload.single('photo'), canUploadPhoto, async (req, res) 
     // Converter buffer para base64
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-    
+
     // Upload para Cloudinary
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: 'guia-aventureiro',
       resource_type: 'auto',
-      transformation: [
-        { width: 1200, height: 800, crop: 'limit' },
-        { quality: 'auto' },
-      ],
+      transformation: [{ width: 1200, height: 800, crop: 'limit' }, { quality: 'auto' }],
     });
 
     // Se tem itineraryId, adicionar foto ao roteiro
@@ -99,10 +96,7 @@ router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async
       const result = await cloudinary.uploader.upload(dataURI, {
         folder: 'guia-aventureiro',
         resource_type: 'auto',
-        transformation: [
-          { width: 1200, height: 800, crop: 'limit' },
-          { quality: 'auto' },
-        ],
+        transformation: [{ width: 1200, height: 800, crop: 'limit' }, { quality: 'auto' }],
       });
 
       return {
@@ -121,7 +115,7 @@ router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async
       if (!req.itinerary.rating.photos) {
         req.itinerary.rating.photos = [];
       }
-      const photoUrls = results.map(r => r.url);
+      const photoUrls = results.map((r) => r.url);
       req.itinerary.rating.photos.push(...photoUrls);
       await req.itinerary.save();
       console.log(`📸 ${photoUrls.length} fotos adicionadas ao roteiro:`, req.itinerary._id);
@@ -154,9 +148,9 @@ router.delete('/:publicId', auth, async (req, res) => {
     }
 
     const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
-    const collaborator = itinerary.collaborators && itinerary.collaborators.find(
-      collab => collab.user.toString() === req.userId.toString()
-    );
+    const collaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.find((collab) => collab.user.toString() === req.userId.toString());
 
     if (!isOwner && !collaborator) {
       return res.status(403).json({ message: 'Sem permissão para deletar foto deste roteiro' });
@@ -169,8 +163,9 @@ router.delete('/:publicId', auth, async (req, res) => {
     const cleanPublicId = decodeURIComponent(publicId).replace('guia-aventureiro/', '');
     const fullPublicId = `guia-aventureiro/${cleanPublicId}`;
 
-    const photoUrlIndex = itinerary.rating.photos.findIndex((photoUrl) =>
-      typeof photoUrl === 'string' && photoUrl.includes(`/guia-aventureiro/${cleanPublicId}`)
+    const photoUrlIndex = itinerary.rating.photos.findIndex(
+      (photoUrl) =>
+        typeof photoUrl === 'string' && photoUrl.includes(`/guia-aventureiro/${cleanPublicId}`)
     );
 
     if (photoUrlIndex === -1) {
@@ -208,9 +203,9 @@ router.delete('/', auth, async (req, res) => {
     }
 
     const isOwner = itinerary.owner && itinerary.owner.toString() === req.userId.toString();
-    const collaborator = itinerary.collaborators && itinerary.collaborators.find(
-      collab => collab.user.toString() === req.userId.toString()
-    );
+    const collaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.find((collab) => collab.user.toString() === req.userId.toString());
 
     if (!isOwner && !collaborator) {
       return res.status(403).json({ message: 'Sem permissão para remover foto deste roteiro' });
@@ -235,7 +230,10 @@ router.delete('/', auth, async (req, res) => {
         await cloudinary.uploader.destroy(publicId);
       }
     } catch (cloudinaryError) {
-      console.error('Falha ao remover imagem no Cloudinary (foto já removida do roteiro):', cloudinaryError.message);
+      console.error(
+        'Falha ao remover imagem no Cloudinary (foto já removida do roteiro):',
+        cloudinaryError.message
+      );
     }
 
     return res.status(200).json({

@@ -21,17 +21,9 @@ const sendInternalError = (res, message, error) => {
 
 // Gerar tokens
 const generateTokens = (userId) => {
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '15m' }
-  );
+  const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
 
-  const refreshToken = jwt.sign(
-    { userId },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' }
-  );
+  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
   return { accessToken, refreshToken };
 };
@@ -68,11 +60,11 @@ exports.signup = async (req, res) => {
     }
 
     // Criar usuário (email sempre em lowercase)
-    const user = new User({ 
-      name: name.trim(), 
-      email: email.toLowerCase().trim(), 
-      password, 
-      acceptedTerms 
+    const user = new User({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      acceptedTerms,
     });
     await user.save();
 
@@ -207,7 +199,8 @@ exports.getProfile = async (req, res) => {
 // Update profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, avatar, preferences, publicProfile, hasCompletedOnboarding, tooltipsShown } = req.body;
+    const { name, avatar, preferences, publicProfile, hasCompletedOnboarding, tooltipsShown } =
+      req.body;
 
     // Validar nome vazio
     if (name !== undefined && name.trim() === '') {
@@ -280,24 +273,15 @@ exports.deleteAccount = async (req, res) => {
         { $pull: { collaborators: { user: req.userId } } }
       ),
       Rating.deleteMany({
-        $or: [
-          { user: req.userId },
-          { itinerary: { $in: ownedItineraryIds } },
-        ],
+        $or: [{ user: req.userId }, { itinerary: { $in: ownedItineraryIds } }],
       }),
       Message.deleteMany({
-        $or: [
-          { sender: req.userId },
-          { itinerary: { $in: ownedItineraryIds } },
-        ],
+        $or: [{ sender: req.userId }, { itinerary: { $in: ownedItineraryIds } }],
       }),
       Achievement.deleteMany({ user: req.userId }),
       Notification.deleteMany({ user: req.userId }),
       Subscription.deleteOne({ user: req.userId }),
-      User.updateMany(
-        {},
-        { $pull: { savedItineraries: { $in: ownedItineraryIds } } }
-      ),
+      User.updateMany({}, { $pull: { savedItineraries: { $in: ownedItineraryIds } } }),
     ]);
 
     await User.findByIdAndDelete(req.userId);
@@ -312,8 +296,10 @@ exports.getPublicProfile = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).select('name avatar isPremium createdAt publicProfile preferences');
-    
+    const user = await User.findById(userId).select(
+      'name avatar isPremium createdAt publicProfile preferences'
+    );
+
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado.' });
     }
@@ -325,11 +311,11 @@ exports.getPublicProfile = async (req, res) => {
     // Buscar estatísticas
     const Itinerary = require('../models/Itinerary');
     const itineraries = await Itinerary.find({ owner: userId });
-    
+
     const stats = {
       totalItineraries: itineraries.length,
-      completedItineraries: itineraries.filter(i => i.status === 'concluido').length,
-      countries: [...new Set(itineraries.map(i => i.destination.country))].length,
+      completedItineraries: itineraries.filter((i) => i.status === 'concluido').length,
+      countries: [...new Set(itineraries.map((i) => i.destination.country))].length,
     };
 
     res.json({
