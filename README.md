@@ -205,32 +205,33 @@ http://localhost:3000/api
 
 #### **Autenticação**
 ```http
-POST   /api/auth/register        # Cadastro
+POST   /api/auth/signup          # Cadastro
 POST   /api/auth/login           # Login
 POST   /api/auth/refresh         # Refresh token
-GET    /api/auth/me              # Dados do usuário
+GET    /api/auth/profile         # Dados do usuário autenticado
 ```
 
 #### **Roteiros (Itinerários)**
 ```http
-GET    /api/itineraries          # Listar roteiros (paginado)
-POST   /api/itineraries          # Criar roteiro
-GET    /api/itineraries/:id      # Detalhe do roteiro
-PUT    /api/itineraries/:id      # Atualizar roteiro
-DELETE /api/itineraries/:id      # Deletar roteiro
+GET    /api/roteiros             # Listar roteiros (paginado)
+POST   /api/roteiros             # Criar roteiro
+GET    /api/roteiros/:id         # Detalhe do roteiro
+PUT    /api/roteiros/:id         # Atualizar roteiro
+DELETE /api/roteiros/:id         # Deletar roteiro
 ```
 
 #### **IA (Geração de Roteiros)**
 ```http
-POST   /api/ai/generate          # Gerar roteiro com IA
+POST   /api/roteiros/generate    # Gerar roteiro com IA
 ```
 
 #### **Explorar**
 ```http
-GET    /api/explore              # Feed de roteiros públicos
-GET    /api/explore/trending     # Roteiros em alta
-POST   /api/explore/:id/like     # Curtir roteiro
-POST   /api/explore/:id/save     # Salvar roteiro
+GET    /api/explore/itineraries        # Feed de roteiros públicos
+GET    /api/explore/featured           # Roteiros em destaque
+GET    /api/explore/popular-destinations # Destinos em alta
+POST   /api/explore/like/:id           # Curtir roteiro
+POST   /api/explore/save/:id           # Salvar roteiro
 ```
 
 #### **Avaliações**
