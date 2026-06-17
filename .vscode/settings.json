@@ -83,6 +83,15 @@
   "markdownlint.config": {
     "default": true,
     "MD013": false,
-    "ignores": [".vscode/README.md", "README.md", "ROADMAP.md", "CONTRIBUTING.md", "archive/**"]
+    "ignores": [
+      ".vscode/README.md",
+      "README.md",
+      "ROADMAP.md",
+      "CONTRIBUTING.md",
+      "archive/**",
+      "automation/**",
+      "backend/*_BEST_PRACTICES.md",
+      "backend/README*.md"
+    ]
   }
 }
