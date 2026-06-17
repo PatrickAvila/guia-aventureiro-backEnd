@@ -17,6 +17,18 @@ const getPublicUserIds = async () => {
   return publicUsers.map((user) => user._id);
 };
 
+const addLikesCount = (itinerary) => {
+  if (!itinerary) return itinerary;
+
+  const plain = typeof itinerary.toObject === 'function' ? itinerary.toObject() : itinerary;
+  const likes = Array.isArray(plain.likes) ? plain.likes : [];
+
+  return {
+    ...plain,
+    likesCount: likes.length,
+  };
+};
+
 /**
  * GET /api/explore/itineraries
  * Retorna feed de roteiros públicos com paginação e filtros
@@ -111,7 +123,7 @@ exports.getPublicItineraries = async (req, res, next) => {
     };
 
     res.json({
-      itineraries,
+      itineraries: itineraries.map(addLikesCount),
       pagination,
     });
   } catch (error) {
@@ -140,7 +152,7 @@ exports.getFeaturedItineraries = async (req, res, next) => {
       .sort({ views: -1, 'rating.score': -1 })
       .limit(limit);
 
-    res.json(itineraries);
+    res.json(itineraries.map(addLikesCount));
   } catch (error) {
     logger.error('Erro ao buscar roteiros em destaque:', error);
     next(error);
@@ -199,24 +211,30 @@ exports.getPopularDestinations = async (req, res, next) => {
 exports.toggleLike = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.userId.toString();
 
     const itinerary = await Itinerary.findOne({ _id: id, isPublic: true });
     if (!itinerary) {
       return res.status(404).json({ message: 'Roteiro não encontrado ou não é público' });
     }
 
-    const likedIndex =
-      itinerary.likes?.findIndex((likeUserId) => likeUserId.toString() === userId) ?? -1;
+    const normalizedLikes = Array.from(
+      new Set((itinerary.likes || []).map((likeUserId) => likeUserId.toString()))
+    );
+
+    itinerary.likes = normalizedLikes;
+
+    const likedIndex = normalizedLikes.findIndex((likeUserId) => likeUserId === userId);
 
     if (likedIndex > -1) {
-      // Remover like
-      itinerary.likes.splice(likedIndex, 1);
+      // Remover todas as ocorrências desse usuário por segurança.
+      itinerary.likes = normalizedLikes.filter((likeUserId) => likeUserId !== userId);
     } else {
       // Adicionar like
-      if (!itinerary.likes) itinerary.likes = [];
-      itinerary.likes.push(userId);
+      itinerary.likes = [...normalizedLikes, userId];
     }
+
+    itinerary.markModified('likes');
 
     await itinerary.save();
 
@@ -324,7 +342,7 @@ exports.getSavedItineraries = async (req, res, next) => {
       hasPrev: page > 1,
     };
 
-    res.json({ itineraries, pagination });
+    res.json({ itineraries: itineraries.map(addLikesCount), pagination });
   } catch (error) {
     logger.error('Erro ao buscar roteiros salvos:', error);
     next(error);

@@ -12,7 +12,7 @@ const PLANS = {
     price: {
       monthly: 0,
       yearly: 0,
-      currency: 'BRL'
+      currency: 'BRL',
     },
     limits: {
       itineraries: 5, // 5 roteiros ativos (↑ de 3)
@@ -33,21 +33,17 @@ const PLANS = {
       earlyAccess: false,
     },
     description: 'Perfeito para começar a planejar suas viagens',
-    highlights: [
-      'Até 5 roteiros ativos',
-      '15 criações de roteiros por mês',
-      'Roteiros privados',
-    ],
+    highlights: ['Até 5 roteiros ativos', '15 criações de roteiros por mês', 'Roteiros privados'],
     cta: 'Comece Grátis',
   },
-  
+
   premium: {
     id: 'premium',
     name: 'Premium',
     price: {
-      monthly: 19.90,
-      yearly: 199.00, // ~16.58/mês (economia de 17%)
-      currency: 'BRL'
+      monthly: 19.9,
+      yearly: 199.0, // ~16.58/mês (economia de 17%)
+      currency: 'BRL',
     },
     stripePriceIds: {
       monthly: process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID,
@@ -66,7 +62,7 @@ const PLANS = {
       publicSharing: true, // compartilhar roteiros individuais
       photoUpload: true,
       offlineMode: true,
-      exportPDF: true,
+      exportPDF: false,
       prioritySupport: false,
       removeAds: true,
       earlyAccess: false,
@@ -77,7 +73,6 @@ const PLANS = {
       'Criações ilimitadas de roteiros',
       'Upload de fotos (20 por roteiro)',
       'Modo offline',
-      'Exportar PDF',
       'Sem anúncios',
     ],
     cta: 'Assinar Premium',
@@ -113,10 +108,10 @@ const isPlanSuperior = (plan1, plan2) => {
 const getYearlySavings = (planId) => {
   const plan = PLANS[planId];
   if (!plan || plan.id === 'free') return null;
-  
+
   const monthlyTotal = plan.price.monthly * 12;
   const yearlyTotal = plan.price.yearly;
-  
+
   return {
     absolute: monthlyTotal - yearlyTotal,
     percentage: Math.round(((monthlyTotal - yearlyTotal) / monthlyTotal) * 100),

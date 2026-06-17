@@ -9,6 +9,114 @@ const logger = require('../utils/logger');
 const cloudinary = require('../config/cloudinary');
 
 /**
+ * Alinha os dias do roteiro ao intervalo startDate/endDate.
+ * Preserva dados existentes por ordem e completa/fatia conforme necessário.
+ */
+const syncItineraryDaysWithDateRange = (itinerary) => {
+  if (!itinerary?.startDate || !itinerary?.endDate) {
+    return;
+  }
+
+  const startDate = new Date(itinerary.startDate);
+  const endDate = new Date(itinerary.endDate);
+
+  // Trabalhar em UTC para evitar perda de dia por timezone.
+  startDate.setUTCHours(0, 0, 0, 0);
+  endDate.setUTCHours(0, 0, 0, 0);
+
+  const totalDays = Math.max(
+    1,
+    Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  );
+
+  const existingDays = Array.isArray(itinerary.days) ? itinerary.days : [];
+  const syncedDays = [];
+
+  for (let i = 0; i < totalDays; i += 1) {
+    const existingDay = existingDays[i];
+    const currentDate = new Date(startDate);
+    currentDate.setUTCDate(startDate.getUTCDate() + i);
+
+    syncedDays.push({
+      date: currentDate,
+      dayNumber: i + 1,
+      title: existingDay?.title || `Dia ${i + 1}`,
+      activities: Array.isArray(existingDay?.activities) ? existingDay.activities : [],
+      dailyBudget: existingDay?.dailyBudget || 0,
+      notes: existingDay?.notes || '',
+    });
+  }
+
+  itinerary.days = syncedDays;
+};
+
+const normalizeActivity = (activity, fallbackActivity = {}) => {
+  const source = activity && typeof activity === 'object' ? activity : {};
+  const fallback = fallbackActivity && typeof fallbackActivity === 'object' ? fallbackActivity : {};
+
+  return {
+    time: source.time || fallback.time || '',
+    title: source.title || fallback.title || 'Atividade',
+    description: source.description ?? fallback.description ?? '',
+    location: source.location || fallback.location,
+    estimatedCost:
+      source.estimatedCost ?? source.cost ?? fallback.estimatedCost ?? fallback.cost ?? 0,
+    duration: Number.isFinite(source.duration)
+      ? source.duration
+      : Number.isFinite(fallback.duration)
+        ? fallback.duration
+        : 60,
+    category: source.category || fallback.category || 'outro',
+    bookingLinks: Array.isArray(source.bookingLinks)
+      ? source.bookingLinks
+      : Array.isArray(fallback.bookingLinks)
+        ? fallback.bookingLinks
+        : [],
+    completed: source.completed ?? source.isCompleted ?? fallback.completed ?? false,
+  };
+};
+
+const normalizeIncomingDays = (incomingDays, existingDays, totalDays, startDate) => {
+  const safeIncomingDays = Array.isArray(incomingDays) ? incomingDays : [];
+  const safeExistingDays = Array.isArray(existingDays) ? existingDays : [];
+
+  const mergedDays = Array.from({ length: totalDays }, (_, index) => {
+    const existingDay = safeExistingDays[index] || {};
+    const incomingDay = safeIncomingDays[index] || {};
+    const currentDate = new Date(startDate);
+    currentDate.setUTCDate(startDate.getUTCDate() + index);
+
+    const incomingActivities = Array.isArray(incomingDay.activities)
+      ? incomingDay.activities
+      : null;
+    const existingActivities = Array.isArray(existingDay.activities) ? existingDay.activities : [];
+
+    // Evita perda de conteúdo quando payload chega parcial (ex: só dia 1 e 2 com dados).
+    const shouldPreserveExistingActivities =
+      incomingActivities !== null && incomingActivities.length === 0;
+    const activitiesSource =
+      incomingActivities === null || shouldPreserveExistingActivities
+        ? existingActivities
+        : incomingActivities;
+
+    const normalizedActivities = activitiesSource
+      .filter((activity) => activity && typeof activity === 'object')
+      .map((activity, actIndex) => normalizeActivity(activity, existingActivities[actIndex]));
+
+    return {
+      date: incomingDay.date || existingDay.date || currentDate,
+      dayNumber: index + 1,
+      title: incomingDay.title || existingDay.title || `Dia ${index + 1}`,
+      activities: normalizedActivities,
+      dailyBudget: incomingDay.dailyBudget ?? existingDay.dailyBudget ?? 0,
+      notes: incomingDay.notes ?? existingDay.notes ?? '',
+    };
+  });
+
+  return mergedDays;
+};
+
+/**
  * Helper: Deletar fotos do Cloudinary
  */
 const deletePhotosFromCloudinary = async (photos) => {
@@ -262,7 +370,6 @@ exports.updateItinerary = async (req, res) => {
       'endDate',
       'budget',
       'preferences',
-      'days',
       'status',
       'isPublic',
       'rating',
@@ -273,6 +380,26 @@ exports.updateItinerary = async (req, res) => {
         itinerary[field] = req.body[field];
       }
     });
+
+    // Se as datas mudaram e dias não foram enviados explicitamente,
+    // recalcula a grade de dias para refletir o novo período.
+    const dateWasUpdated = req.body.startDate !== undefined || req.body.endDate !== undefined;
+    const daysWereProvided = req.body.days !== undefined;
+    if (daysWereProvided) {
+      const startDate = new Date(itinerary.startDate);
+      const endDate = new Date(itinerary.endDate);
+      startDate.setUTCHours(0, 0, 0, 0);
+      endDate.setUTCHours(0, 0, 0, 0);
+
+      const totalDays = Math.max(
+        1,
+        Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      );
+
+      itinerary.days = normalizeIncomingDays(req.body.days, itinerary.days, totalDays, startDate);
+    } else if (dateWasUpdated && !daysWereProvided) {
+      syncItineraryDaysWithDateRange(itinerary);
+    }
 
     itinerary.lastEditedBy = req.userId;
     itinerary.lastEditedAt = new Date();

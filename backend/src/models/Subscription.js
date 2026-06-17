@@ -233,10 +233,10 @@ subscriptionSchema.methods.updateLimitsForPlan = function (plan) {
       collaborators: 0,
       features: {
         offlineMode: true,
-        prioritySupport: true,
-        advancedAnalytics: true,
+        prioritySupport: false,
+        advancedAnalytics: false,
         customBranding: false,
-        exportPDF: true,
+        exportPDF: false,
         apiAccess: false,
       },
     },
