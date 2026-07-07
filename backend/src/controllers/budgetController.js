@@ -17,17 +17,13 @@ exports.addExpense = async (req, res, next) => {
 
     // Verificar se é dono ou colaborador com permissão de edição
     const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
-    const canEdit = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
-    );
-    
-    console.log('🔐 Verificação de permissão:', {
-      owner: itinerary.owner,
-      userId,
-      isOwner,
-      canEdit,
-      isPublic: itinerary.isPublic
-    });
+    const canEdit =
+      itinerary.collaborators &&
+      itinerary.collaborators.some(
+        (collab) => collab.user.toString() === userId.toString() && collab.permission === 'edit'
+      );
+
+    logger.debug('Verificação de permissão em addExpense');
 
     // Permitir editar se: é owner, colaborador com permissão, OU roteiro público
     if (!isOwner && !canEdit && !itinerary.isPublic) {
@@ -56,13 +52,16 @@ exports.addExpense = async (req, res, next) => {
 
     await itinerary.save();
 
-    logger.log(`Gasto adicionado ao roteiro ${id}: ${amount} ${currency || itinerary.budget.currency}`);
+    logger.log(
+      `Gasto adicionado ao roteiro ${id}: ${amount} ${currency || itinerary.budget.currency}`
+    );
 
     res.status(201).json({
       message: 'Gasto adicionado com sucesso',
-      expense: itinerary.expenses && itinerary.expenses.length > 0 
-        ? itinerary.expenses[itinerary.expenses.length - 1] 
-        : null,
+      expense:
+        itinerary.expenses && itinerary.expenses.length > 0
+          ? itinerary.expenses[itinerary.expenses.length - 1]
+          : null,
       budgetSummary: {
         estimated: itinerary.budget.estimatedTotal,
         spent: itinerary.budget.spent,
@@ -91,9 +90,11 @@ exports.updateExpense = async (req, res, next) => {
 
     // Verificar permissão
     const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
-    const canEdit = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
-    );
+    const canEdit =
+      itinerary.collaborators &&
+      itinerary.collaborators.some(
+        (collab) => collab.user.toString() === userId.toString() && collab.permission === 'edit'
+      );
 
     // Permitir editar se: é owner, colaborador com permissão, OU roteiro público
     if (!isOwner && !canEdit && !itinerary.isPublic) {
@@ -155,9 +156,11 @@ exports.deleteExpense = async (req, res, next) => {
 
     // Verificar permissão
     const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
-    const canEdit = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user.toString() === userId.toString() && collab.permission === 'edit'
-    );
+    const canEdit =
+      itinerary.collaborators &&
+      itinerary.collaborators.some(
+        (collab) => collab.user.toString() === userId.toString() && collab.permission === 'edit'
+      );
 
     // Permitir deletar se: é owner, colaborador com permissão, OU roteiro público
     if (!isOwner && !canEdit && !itinerary.isPublic) {
@@ -212,9 +215,9 @@ exports.getBudgetSummary = async (req, res, next) => {
 
     // Verificar se tem acesso
     const isOwner = itinerary.owner && itinerary.owner.toString() === userId.toString();
-    const isCollaborator = itinerary.collaborators && itinerary.collaborators.some(
-      collab => collab.user.toString() === userId.toString()
-    );
+    const isCollaborator =
+      itinerary.collaborators &&
+      itinerary.collaborators.some((collab) => collab.user.toString() === userId.toString());
 
     if (!isOwner && !isCollaborator && !itinerary.isPublic) {
       return res.status(403).json({ message: 'Você não tem permissão para ver este roteiro' });
@@ -223,7 +226,7 @@ exports.getBudgetSummary = async (req, res, next) => {
     // Calcular estatísticas por categoria
     const byCategory = {};
     if (itinerary.expenses && Array.isArray(itinerary.expenses)) {
-      itinerary.expenses.forEach(expense => {
+      itinerary.expenses.forEach((expense) => {
         if (!byCategory[expense.category]) {
           byCategory[expense.category] = {
             total: 0,
@@ -231,15 +234,15 @@ exports.getBudgetSummary = async (req, res, next) => {
             items: [],
           };
         }
-      byCategory[expense.category].total += expense.amount;
-      byCategory[expense.category].count++;
-      byCategory[expense.category].items.push({
-        id: expense._id,
-        description: expense.description,
-        amount: expense.amount,
-        date: expense.date,
+        byCategory[expense.category].total += expense.amount;
+        byCategory[expense.category].count++;
+        byCategory[expense.category].items.push({
+          id: expense._id,
+          description: expense.description,
+          amount: expense.amount,
+          date: expense.date,
+        });
       });
-    });
     }
 
     const summary = {
@@ -247,9 +250,10 @@ exports.getBudgetSummary = async (req, res, next) => {
         estimated: itinerary.budget.estimatedTotal,
         spent: itinerary.budget.spent,
         remaining: itinerary.budget.estimatedTotal - itinerary.budget.spent,
-        percentage: itinerary.budget.estimatedTotal > 0 
-          ? ((itinerary.budget.spent / itinerary.budget.estimatedTotal) * 100).toFixed(1)
-          : 0,
+        percentage:
+          itinerary.budget.estimatedTotal > 0
+            ? ((itinerary.budget.spent / itinerary.budget.estimatedTotal) * 100).toFixed(1)
+            : 0,
         currency: itinerary.budget.currency,
         level: itinerary.budget.level,
         lastUpdated: itinerary.budget.lastUpdated,
@@ -260,7 +264,7 @@ exports.getBudgetSummary = async (req, res, next) => {
         recent: (itinerary.expenses || [])
           .sort((a, b) => b.date - a.date)
           .slice(0, 10)
-          .map(exp => ({
+          .map((exp) => ({
             id: exp._id,
             date: exp.date,
             category: exp.category,
@@ -270,9 +274,8 @@ exports.getBudgetSummary = async (req, res, next) => {
             receipt: exp.receipt,
           })),
       },
-      dailyAverage: itinerary.duration > 0 
-        ? (itinerary.budget.spent / itinerary.duration).toFixed(2)
-        : 0,
+      dailyAverage:
+        itinerary.duration > 0 ? (itinerary.budget.spent / itinerary.duration).toFixed(2) : 0,
     };
 
     res.json(summary);

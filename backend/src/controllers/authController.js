@@ -10,14 +10,24 @@ const jwt = require('jsonwebtoken');
 const { recordFailedAttempt, clearFailedAttempts } = require('../middleware/ipBlocker');
 const { hashRefreshToken, compareRefreshToken } = require('../utils/tokenSecurity');
 
-const sendInternalError = (res, message, error) => {
-  const response = { message };
+const toSafeUser = (user) => {
+  if (!user) return null;
 
-  if (process.env.NODE_ENV !== 'production') {
-    response.debug = error.message;
+  const safeUser = typeof user.toObject === 'function' ? user.toObject() : { ...user };
+  delete safeUser.password;
+  delete safeUser.refreshToken;
+  delete safeUser.__v;
+
+  if (safeUser.subscription) {
+    delete safeUser.subscription.stripeCustomerId;
+    delete safeUser.subscription.stripeSubscriptionId;
   }
 
-  return res.status(500).json(response);
+  return safeUser;
+};
+
+const sendInternalError = (res, message, error) => {
+  return res.status(500).json({ message });
 };
 
 // Gerar tokens
@@ -82,7 +92,7 @@ exports.signup = async (req, res) => {
 
     res.status(201).json({
       message: `Bem-vindo, ${user.name}!`,
-      user,
+      user: toSafeUser(user),
       accessToken,
       refreshToken,
     });
@@ -131,7 +141,7 @@ exports.login = async (req, res) => {
 
     res.json({
       message: `Bem-vindo, ${user.name}!`,
-      user,
+      user: toSafeUser(user),
       accessToken,
       refreshToken,
     });
@@ -192,7 +202,7 @@ exports.logout = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
-    res.json({ user });
+    res.json({ user: toSafeUser(user) });
   } catch (error) {
     return sendInternalError(res, 'Erro ao buscar perfil.', error);
   }
@@ -220,7 +230,7 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    res.json({ message: 'Perfil atualizado com sucesso.', user });
+    res.json({ message: 'Perfil atualizado com sucesso.', user: toSafeUser(user) });
   } catch (error) {
     return sendInternalError(res, 'Erro ao atualizar perfil.', error);
   }
@@ -299,7 +309,7 @@ exports.getPublicProfile = async (req, res) => {
     const { userId } = req.params;
 
     const user = await User.findById(userId).select(
-      'name avatar isPremium createdAt publicProfile preferences'
+      'name avatar isPremium createdAt publicProfile'
     );
 
     if (!user) {
@@ -326,7 +336,6 @@ exports.getPublicProfile = async (req, res) => {
         avatar: user.avatar,
         isPremium: user.isPremium,
         memberSince: user.createdAt,
-        preferences: user.preferences,
       },
       stats,
     });

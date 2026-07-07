@@ -135,7 +135,7 @@ const deletePhotosFromCloudinary = async (photos) => {
         logger.debug(`Foto deletada do Cloudinary: ${publicId}`);
       }
     } catch (error) {
-      logger.error(`Erro ao deletar foto do Cloudinary (${photoUrl}):`, error.message);
+      logger.error('Erro ao deletar foto do Cloudinary');
       // Continua deletando outras fotos mesmo se uma falhar
     }
   }
@@ -179,7 +179,7 @@ exports.getUserItineraries = async (req, res) => {
     logger.log(`Roteiros listados: ${itineraries.length} de ${total}`);
   } catch (error) {
     logger.error('Erro ao buscar roteiros:', error);
-    res.status(500).json({ message: 'Erro ao buscar roteiros.', error: error.message });
+    res.status(500).json({ message: 'Erro ao buscar roteiros.' });
   }
 };
 
@@ -197,8 +197,8 @@ exports.getItineraryById = async (req, res) => {
     }
 
     const itinerary = await Itinerary.findById(id)
-      .populate('owner', 'name avatar email')
-      .populate('collaborators.user', 'name avatar email');
+      .populate('owner', 'name avatar')
+      .populate('collaborators.user', 'name avatar');
 
     if (!itinerary) {
       return res.status(404).json({ message: 'Roteiro não encontrado.' });
@@ -216,10 +216,21 @@ exports.getItineraryById = async (req, res) => {
       return res.status(403).json({ message: 'Você não tem permissão para acessar este roteiro.' });
     }
 
+    if (!isOwner && !isCollaborator && itinerary.isPublic) {
+      const publicItinerary = itinerary.toObject();
+      delete publicItinerary.aiPrompt;
+      delete publicItinerary.lastEditedBy;
+      delete publicItinerary.collaborators;
+      delete publicItinerary.expenses;
+      delete publicItinerary.preferences;
+      res.json(publicItinerary);
+      return;
+    }
+
     res.json(itinerary);
   } catch (error) {
     logger.error('Erro ao buscar roteiro:', error);
-    res.status(500).json({ message: 'Erro ao buscar roteiro.', error: error.message });
+    res.status(500).json({ message: 'Erro ao buscar roteiro.' });
   }
 };
 
@@ -251,7 +262,7 @@ exports.createItinerary = async (req, res) => {
       itinerary,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao criar roteiro.', error: error.message });
+    res.status(500).json({ message: 'Erro ao criar roteiro.' });
   }
 };
 
@@ -333,10 +344,6 @@ exports.generateItineraryWithAI = async (req, res) => {
   } catch (error) {
     logger.error('Erro ao gerar roteiro com IA:', error);
     const errorResponse = { message: 'Erro ao gerar roteiro.' };
-
-    if (process.env.NODE_ENV !== 'production') {
-      errorResponse.error = error.message;
-    }
 
     res.status(500).json(errorResponse);
   }
@@ -421,7 +428,7 @@ exports.updateItinerary = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao atualizar roteiro:', error);
-    res.status(500).json({ message: 'Erro ao atualizar roteiro.', error: error.message });
+    res.status(500).json({ message: 'Erro ao atualizar roteiro.' });
   }
 };
 
@@ -478,7 +485,7 @@ exports.deleteItinerary = async (req, res) => {
 
     res.json({ message: 'Roteiro excluído com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao excluir roteiro.', error: error.message });
+    res.status(500).json({ message: 'Erro ao excluir roteiro.' });
   }
 };
 
@@ -532,7 +539,7 @@ exports.addCollaborator = async (req, res) => {
       itinerary,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao adicionar colaborador.', error: error.message });
+    res.status(500).json({ message: 'Erro ao adicionar colaborador.' });
   }
 };
 
@@ -569,7 +576,7 @@ exports.removeCollaborator = async (req, res) => {
       itinerary,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover colaborador.', error: error.message });
+    res.status(500).json({ message: 'Erro ao remover colaborador.' });
   }
 };
 
@@ -622,6 +629,6 @@ exports.duplicateItinerary = async (req, res) => {
     });
   } catch (error) {
     logger.error('Erro ao duplicar roteiro:', error);
-    res.status(500).json({ message: 'Erro ao duplicar roteiro.', error: error.message });
+    res.status(500).json({ message: 'Erro ao duplicar roteiro.' });
   }
 };

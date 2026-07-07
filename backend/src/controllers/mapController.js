@@ -1,5 +1,6 @@
 // backend/src/controllers/mapController.js
 const Itinerary = require('../models/Itinerary');
+const logger = require('../utils/logger');
 
 /**
  * Calcula a distância entre dois pontos usando a fórmula de Haversine
@@ -11,12 +12,14 @@ const Itinerary = require('../models/Itinerary');
  */
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Raio da Terra em km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
   return Math.round(distance * 100) / 100; // Arredonda para 2 casas decimais
@@ -51,7 +54,8 @@ exports.getItineraryMap = async (req, res) => {
 
     // Verificar permissão
     const isOwner = userId && itinerary.owner.toString() === userId.toString();
-    const isCollaborator = userId && itinerary.collaborators.some(c => c.user.toString() === userId.toString());
+    const isCollaborator =
+      userId && itinerary.collaborators.some((c) => c.user.toString() === userId.toString());
     const hasAccess = isOwner || isCollaborator || itinerary.isPublic;
 
     if (!hasAccess) {
@@ -155,7 +159,7 @@ exports.getItineraryMap = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar mapa do roteiro:', error);
+    logger.error('Erro ao buscar mapa do roteiro');
     res.status(500).json({ message: 'Erro ao buscar dados do mapa' });
   }
 };
@@ -177,14 +181,15 @@ exports.getDayMap = async (req, res) => {
 
     // Verificar permissão
     const isOwner = userId && itinerary.owner.toString() === userId.toString();
-    const isCollaborator = userId && itinerary.collaborators.some(c => c.user.toString() === userId.toString());
+    const isCollaborator =
+      userId && itinerary.collaborators.some((c) => c.user.toString() === userId.toString());
     const hasAccess = isOwner || isCollaborator || itinerary.isPublic;
 
     if (!hasAccess) {
       return res.status(403).json({ message: 'Acesso negado' });
     }
 
-    const day = itinerary.days.find(d => d.dayNumber === parseInt(dayNumber));
+    const day = itinerary.days.find((d) => d.dayNumber === parseInt(dayNumber));
 
     if (!day) {
       return res.status(404).json({ message: 'Dia não encontrado' });
@@ -269,7 +274,7 @@ exports.getDayMap = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar mapa do dia:', error);
+    logger.error('Erro ao buscar mapa do dia');
     res.status(500).json({ message: 'Erro ao buscar dados do mapa' });
   }
 };
@@ -296,7 +301,8 @@ exports.getNearbyPoints = async (req, res) => {
 
     // Verificar permissão
     const isOwner = userId && itinerary.owner.toString() === userId.toString();
-    const isCollaborator = userId && itinerary.collaborators.some(c => c.user.toString() === userId.toString());
+    const isCollaborator =
+      userId && itinerary.collaborators.some((c) => c.user.toString() === userId.toString());
     const hasAccess = isOwner || isCollaborator || itinerary.isPublic;
 
     if (!hasAccess) {
@@ -350,7 +356,7 @@ exports.getNearbyPoints = async (req, res) => {
       total: nearbyPoints.length,
     });
   } catch (error) {
-    console.error('Erro ao buscar pontos próximos:', error);
+    logger.error('Erro ao buscar pontos próximos');
     res.status(500).json({ message: 'Erro ao buscar pontos próximos' });
   }
 };

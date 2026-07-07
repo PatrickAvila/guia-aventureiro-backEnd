@@ -58,8 +58,8 @@ exports.createCheckoutSession = async (req, res) => {
     const normalizedBaseUrl = redirectBaseUrl.endsWith('/')
       ? redirectBaseUrl.slice(0, -1)
       : redirectBaseUrl;
-    const successUrl = `${normalizedBaseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${normalizedBaseUrl}/payment/cancel`;
+    const successUrl = `${normalizedBaseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${normalizedBaseUrl}/api/checkout/cancel`;
 
     // Delegar para stripeService (evita duplicação)
     const { sessionId, url } = await stripeService.createCheckoutSession(
@@ -81,10 +81,6 @@ exports.createCheckoutSession = async (req, res) => {
       error: 'Erro ao criar sessão de pagamento',
     };
 
-    if (process.env.NODE_ENV !== 'production') {
-      errorResponse.details = error.message;
-    }
-
     res.status(500).json(errorResponse);
   }
 };
@@ -96,6 +92,7 @@ exports.verifyCheckoutSession = async (req, res) => {
   try {
     const stripe = getStripe();
     const { sessionId } = req.params;
+    const authenticatedUserId = req.user?._id?.toString();
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['subscription'],
@@ -118,12 +115,26 @@ exports.verifyCheckoutSession = async (req, res) => {
       let user = null;
 
       if (session.metadata?.userId) {
+        if (!authenticatedUserId || session.metadata.userId !== authenticatedUserId) {
+          return res.status(403).json({
+            error: 'session_user_mismatch',
+            message: 'A sessão de checkout não pertence ao usuário autenticado',
+          });
+        }
+
         user = await User.findById(session.metadata.userId);
       }
 
       if (!user) {
         // Fallback: buscar pela associação com o customer do Stripe
         user = await User.findOne({ 'subscription.stripeCustomerId': session.customer });
+
+        if (user && authenticatedUserId && user._id.toString() !== authenticatedUserId) {
+          return res.status(403).json({
+            error: 'session_user_mismatch',
+            message: 'A sessão de checkout não pertence ao usuário autenticado',
+          });
+        }
       }
 
       if (user) {
@@ -184,8 +195,6 @@ exports.verifyCheckoutSession = async (req, res) => {
     res.json({
       status: session.status,
       paymentStatus: session.payment_status,
-      subscription: session.subscription,
-      customer: session.customer,
       updated: shouldActivatePremium,
     });
   } catch (error) {
@@ -193,10 +202,6 @@ exports.verifyCheckoutSession = async (req, res) => {
     const errorResponse = {
       error: 'Erro ao verificar sessão',
     };
-
-    if (process.env.NODE_ENV !== 'production') {
-      errorResponse.details = error.message;
-    }
 
     res.status(500).json(errorResponse);
   }

@@ -2,6 +2,7 @@
 const Itinerary = require('../models/Itinerary');
 const User = require('../models/User');
 const Rating = require('../models/Rating');
+const logger = require('../utils/logger');
 
 /**
  * GET /api/recommendations/destinations
@@ -54,12 +55,14 @@ exports.recommendDestinations = async (req, res) => {
     }
 
     // Extrair preferências do usuário
-    const visitedCities = new Set(userItineraries.map(i => i.destination?.city).filter(Boolean));
-    const visitedCountries = new Set(userItineraries.map(i => i.destination?.country).filter(Boolean));
-    
+    const visitedCities = new Set(userItineraries.map((i) => i.destination?.city).filter(Boolean));
+    const visitedCountries = new Set(
+      userItineraries.map((i) => i.destination?.country).filter(Boolean)
+    );
+
     // Interesses do usuário (pegar do último roteiro ou mais frequente)
     const userInterests = userItineraries
-      .flatMap(i => i.preferences?.interests || [])
+      .flatMap((i) => i.preferences?.interests || [])
       .filter(Boolean);
 
     const travelStyle = userItineraries[userItineraries.length - 1]?.preferences?.travelStyle;
@@ -109,7 +112,7 @@ exports.recommendDestinations = async (req, res) => {
 
     res.json(recommendations);
   } catch (error) {
-    console.error('Erro ao recomendar destinos:', error);
+    logger.error('Erro ao recomendar destinos');
     res.status(500).json({ message: 'Erro ao buscar recomendações' });
   }
 };
@@ -142,9 +145,7 @@ exports.recommendItineraries = async (req, res) => {
       .populate('itinerary', 'destination preferences budget duration')
       .lean();
 
-    const ratedItineraries = highRatings
-      .map(r => r.itinerary)
-      .filter(Boolean);
+    const ratedItineraries = highRatings.map((r) => r.itinerary).filter(Boolean);
 
     const referenceItineraries = [...likedItineraries, ...ratedItineraries];
 
@@ -162,19 +163,19 @@ exports.recommendItineraries = async (req, res) => {
 
     // Extrair características
     const preferredCountries = referenceItineraries
-      .map(i => i.destination?.country)
+      .map((i) => i.destination?.country)
       .filter(Boolean);
-    const preferredDurations = referenceItineraries.map(i => i.duration).filter(Boolean);
+    const preferredDurations = referenceItineraries.map((i) => i.duration).filter(Boolean);
     const avgDuration = preferredDurations.reduce((a, b) => a + b, 0) / preferredDurations.length;
 
     const interests = referenceItineraries
-      .flatMap(i => i.preferences?.interests || [])
+      .flatMap((i) => i.preferences?.interests || [])
       .filter(Boolean);
 
     // Buscar roteiros similares
     const recommendations = await Itinerary.find({
       isPublic: true,
-      _id: { $nin: referenceItineraries.map(i => i._id) },
+      _id: { $nin: referenceItineraries.map((i) => i._id) },
       $or: [
         { 'destination.country': { $in: preferredCountries } },
         { 'preferences.interests': { $in: interests } },
@@ -189,7 +190,7 @@ exports.recommendItineraries = async (req, res) => {
 
     res.json(recommendations);
   } catch (error) {
-    console.error('Erro ao recomendar roteiros:', error);
+    logger.error('Erro ao recomendar roteiros');
     res.status(500).json({ message: 'Erro ao buscar recomendações' });
   }
 };
@@ -233,7 +234,7 @@ exports.getSimilarItineraries = async (req, res) => {
 
     res.json(similar);
   } catch (error) {
-    console.error('Erro ao buscar roteiros similares:', error);
+    logger.error('Erro ao buscar roteiros similares');
     res.status(500).json({ message: 'Erro ao buscar roteiros similares' });
   }
 };
@@ -249,9 +250,7 @@ exports.getPersonalizedRecommendations = async (req, res) => {
     }
 
     // Buscar perfil do usuário
-    const user = await User.findById(req.user._id)
-      .select('preferences')
-      .lean();
+    const user = await User.findById(req.user._id).select('preferences').lean();
 
     // Buscar roteiros do usuário
     const userItineraries = await Itinerary.find({ owner: req.user._id })
@@ -265,7 +264,7 @@ exports.getPersonalizedRecommendations = async (req, res) => {
     const budgetLevel = user?.preferences?.budgetLevel;
 
     const itineraryInterests = userItineraries
-      .flatMap(i => i.preferences?.interests || [])
+      .flatMap((i) => i.preferences?.interests || [])
       .filter(Boolean);
 
     const allInterests = [...new Set([...userInterests, ...itineraryInterests])];
@@ -322,7 +321,7 @@ exports.getPersonalizedRecommendations = async (req, res) => {
         .populate('owner', 'name avatar')
         .select('title destination duration budget rating views')
         .lean()
-        .then(items => items.map(i => ({ ...i, type: 'itinerary' }))),
+        .then((items) => items.map((i) => ({ ...i, type: 'itinerary' }))),
     ]);
 
     // Mesclar e embaralhar
@@ -340,7 +339,7 @@ exports.getPersonalizedRecommendations = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar recomendações personalizadas:', error);
+    logger.error('Erro ao buscar recomendações personalizadas');
     res.status(500).json({ message: 'Erro ao buscar recomendações' });
   }
 };
@@ -359,7 +358,7 @@ exports.getTrendingItineraries = async (req, res) => {
       isPublic: true,
       createdAt: { $gte: sevenDaysAgo },
     })
-      .sort({ views: -1, 'likes': -1, 'rating.score': -1 })
+      .sort({ views: -1, likes: -1, 'rating.score': -1 })
       .limit(limit)
       .populate('owner', 'name avatar')
       .select('title destination duration budget rating views likes createdAt')
@@ -367,7 +366,7 @@ exports.getTrendingItineraries = async (req, res) => {
 
     res.json(trending);
   } catch (error) {
-    console.error('Erro ao buscar tendências:', error);
+    logger.error('Erro ao buscar tendências');
     res.status(500).json({ message: 'Erro ao buscar tendências' });
   }
 };

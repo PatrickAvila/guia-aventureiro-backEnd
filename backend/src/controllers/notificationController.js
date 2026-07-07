@@ -1,6 +1,20 @@
 // backend/src/controllers/notificationController.js
 const Notification = require('../models/Notification');
 
+const toSafeNotification = (notification) => {
+  if (!notification) return null;
+
+  const safeNotification =
+    typeof notification.toObject === 'function' ? notification.toObject() : { ...notification };
+
+  delete safeNotification.user;
+  delete safeNotification.__v;
+  delete safeNotification.pushSent;
+  delete safeNotification.pushSentAt;
+
+  return safeNotification;
+};
+
 /**
  * GET /api/notifications
  * Lista notificações do usuário
@@ -11,19 +25,14 @@ exports.getNotifications = async (req, res) => {
       return res.status(401).json({ message: 'Autenticação necessária' });
     }
 
-    const { 
-      page = 1, 
-      limit = 20, 
-      unreadOnly = false,
-      type 
-    } = req.query;
+    const { page = 1, limit = 20, unreadOnly = false, type } = req.query;
 
     const query = { user: req.user._id };
-    
+
     if (unreadOnly === 'true') {
       query.read = false;
     }
-    
+
     if (type) {
       query.type = type;
     }
@@ -31,18 +40,14 @@ exports.getNotifications = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [notifications, total] = await Promise.all([
-      Notification.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
+      Notification.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean(),
       Notification.countDocuments(query),
     ]);
 
     const unreadCount = await Notification.getUnreadCount(req.user._id);
 
     res.json({
-      notifications,
+      notifications: notifications.map(toSafeNotification),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -97,12 +102,18 @@ exports.markAsRead = async (req, res) => {
     }
 
     if (notification.read) {
-      return res.json({ message: 'Notificação já estava marcada como lida', notification });
+      return res.json({
+        message: 'Notificação já estava marcada como lida',
+        notification: toSafeNotification(notification),
+      });
     }
 
     await notification.markAsRead();
 
-    res.json({ message: 'Notificação marcada como lida', notification });
+    res.json({
+      message: 'Notificação marcada como lida',
+      notification: toSafeNotification(notification),
+    });
   } catch (error) {
     console.error('Erro ao marcar notificação como lida:', error);
     res.status(500).json({ message: 'Erro ao atualizar notificação' });
@@ -124,9 +135,9 @@ exports.markAllAsRead = async (req, res) => {
       { read: true, readAt: new Date() }
     );
 
-    res.json({ 
+    res.json({
       message: 'Todas as notificações marcadas como lidas',
-      count: result.modifiedCount 
+      count: result.modifiedCount,
     });
   } catch (error) {
     console.error('Erro ao marcar todas as notificações como lidas:', error);
@@ -177,9 +188,9 @@ exports.deleteAllRead = async (req, res) => {
       read: true,
     });
 
-    res.json({ 
+    res.json({
       message: 'Notificações lidas deletadas com sucesso',
-      count: result.deletedCount 
+      count: result.deletedCount,
     });
   } catch (error) {
     console.error('Erro ao deletar notificações:', error);
@@ -201,8 +212,8 @@ exports.createNotification = async (req, res) => {
 
     // Validações
     if (!userId || !type || !title || !message) {
-      return res.status(400).json({ 
-        message: 'userId, type, title e message são obrigatórios' 
+      return res.status(400).json({
+        message: 'userId, type, title e message são obrigatórios',
       });
     }
 
@@ -217,9 +228,9 @@ exports.createNotification = async (req, res) => {
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Notificação criada com sucesso',
-      notification 
+      notification: toSafeNotification(notification),
     });
   } catch (error) {
     console.error('Erro ao criar notificação:', error);
@@ -230,7 +241,14 @@ exports.createNotification = async (req, res) => {
 /**
  * Helper: Criar notificação (para uso interno no backend)
  */
-exports.createNotificationHelper = async (userId, type, title, message, data = {}, options = {}) => {
+exports.createNotificationHelper = async (
+  userId,
+  type,
+  title,
+  message,
+  data = {},
+  options = {}
+) => {
   try {
     const notification = await Notification.create({
       user: userId,

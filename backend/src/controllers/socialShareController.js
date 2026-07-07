@@ -1,6 +1,6 @@
 // backend/src/controllers/socialShareController.js
 const Itinerary = require('../models/Itinerary');
-const User = require('../models/User');
+const logger = require('../utils/logger');
 
 /**
  * GET /api/social/share-stats/:id
@@ -23,7 +23,7 @@ exports.getShareStats = async (req, res) => {
     // Verificar permissão (owner ou colaborador)
     const isOwner = itinerary.owner.toString() === req.user._id.toString();
     const isCollaborator = itinerary.collaborators.some(
-      c => c.user.toString() === req.user._id.toString()
+      (c) => c.user.toString() === req.user._id.toString()
     );
 
     if (!isOwner && !isCollaborator) {
@@ -31,10 +31,6 @@ exports.getShareStats = async (req, res) => {
     }
 
     res.json({
-      itineraryId: itinerary._id,
-      title: itinerary.title,
-      isPublic: itinerary.isPublic,
-      publicLink: itinerary.publicLink,
       stats: {
         views: itinerary.views || 0,
         likes: itinerary.likes?.length || 0,
@@ -43,7 +39,7 @@ exports.getShareStats = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
+    logger.error('Erro ao buscar estatísticas');
     res.status(500).json({ message: 'Erro ao buscar estatísticas' });
   }
 };
@@ -83,7 +79,7 @@ exports.trackShare = async (req, res) => {
     if (!itinerary.shareHistory) {
       itinerary.shareHistory = [];
     }
-    
+
     itinerary.shareHistory.push({
       platform,
       sharedAt: new Date(),
@@ -97,7 +93,7 @@ exports.trackShare = async (req, res) => {
       shareCount: itinerary.shareCount,
     });
   } catch (error) {
-    console.error('Erro ao registrar compartilhamento:', error);
+    logger.error('Erro ao registrar compartilhamento');
     res.status(500).json({ message: 'Erro ao registrar compartilhamento' });
   }
 };
@@ -146,7 +142,7 @@ exports.getMetaTags = async (req, res) => {
 
     res.json(metaTags);
   } catch (error) {
-    console.error('Erro ao buscar meta tags:', error);
+    logger.error('Erro ao buscar meta tags');
     res.status(500).json({ message: 'Erro ao buscar meta tags' });
   }
 };
@@ -171,17 +167,15 @@ exports.generateSocialLinks = async (req, res) => {
 
     // Verificar se roteiro está público
     if (!itinerary.isPublic || !itinerary.publicLink) {
-      return res.status(400).json({ 
-        message: 'Roteiro precisa estar público para gerar links sociais' 
+      return res.status(400).json({
+        message: 'Roteiro precisa estar público para gerar links sociais',
       });
     }
 
     const shareUrl = `${req.protocol}://${req.get('host')}/shared/${itinerary.publicLink}`;
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(itinerary.title);
-    const encodedText = encodeURIComponent(
-      `Confira este roteiro de viagem: ${itinerary.title}`
-    );
+    const encodedText = encodeURIComponent(`Confira este roteiro de viagem: ${itinerary.title}`);
 
     const socialLinks = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
@@ -189,7 +183,7 @@ exports.generateSocialLinks = async (req, res) => {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
       whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
       telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
-      pinterest: itinerary.destination?.coverImage 
+      pinterest: itinerary.destination?.coverImage
         ? `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodeURIComponent(itinerary.destination.coverImage)}&description=${encodedTitle}`
         : null,
       email: `mailto:?subject=${encodedTitle}&body=${encodedText}%20${encodedUrl}`,
@@ -200,7 +194,7 @@ exports.generateSocialLinks = async (req, res) => {
       socialLinks,
     });
   } catch (error) {
-    console.error('Erro ao gerar links sociais:', error);
+    logger.error('Erro ao gerar links sociais');
     res.status(500).json({ message: 'Erro ao gerar links sociais' });
   }
 };
@@ -213,9 +207,9 @@ exports.getTopShared = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
 
-    const topShared = await Itinerary.find({ 
+    const topShared = await Itinerary.find({
       isPublic: true,
-      shareCount: { $gt: 0 } 
+      shareCount: { $gt: 0 },
     })
       .populate('owner', 'name avatar')
       .select('title destination duration coverImage shareCount views likes')
@@ -225,7 +219,7 @@ exports.getTopShared = async (req, res) => {
 
     res.json(topShared);
   } catch (error) {
-    console.error('Erro ao buscar mais compartilhados:', error);
+    logger.error('Erro ao buscar mais compartilhados');
     res.status(500).json({ message: 'Erro ao buscar roteiros' });
   }
 };
@@ -250,7 +244,7 @@ exports.incrementView = async (req, res) => {
 
     res.json({ views: itinerary.views || 0 });
   } catch (error) {
-    console.error('Erro ao incrementar visualização:', error);
+    logger.error('Erro ao incrementar visualização');
     res.status(500).json({ message: 'Erro ao atualizar visualização' });
   }
 };

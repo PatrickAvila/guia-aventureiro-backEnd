@@ -31,9 +31,9 @@ exports.generateShareLink = async (req, res) => {
       itinerary.publicLink = crypto.randomUUID();
       itinerary.isPublic = true;
       await itinerary.save();
-      
+
       // Verificar conquistas (em background)
-      checkAndUnlockAchievements(userId).catch(err => 
+      checkAndUnlockAchievements(userId).catch((err) =>
         logger.error('Erro ao verificar conquistas:', err)
       );
     }
@@ -82,12 +82,13 @@ exports.copySharedItinerary = async (req, res, next) => {
         expenses: [], // Lista vazia
       },
       preferences: originalItinerary.preferences,
-      days: originalItinerary.days.map(day => ({
+      days: originalItinerary.days.map((day) => ({
         ...day,
-        activities: day.activities?.map(activity => ({
-          ...activity,
-          completed: false, // Resetar status
-        })) || [],
+        activities:
+          day.activities?.map((activity) => ({
+            ...activity,
+            completed: false, // Resetar status
+          })) || [],
       })),
       status: 'rascunho',
       isPublic: false,
@@ -99,7 +100,7 @@ exports.copySharedItinerary = async (req, res, next) => {
     // Incrementar contadores de uso (conta como criação)
     const Subscription = require('../models/Subscription');
     const subscription = await Subscription.findOne({ userId });
-    
+
     if (subscription) {
       await subscription.incrementUsage('itineraries');
       await subscription.incrementUsage('aiGenerations');
@@ -112,7 +113,7 @@ exports.copySharedItinerary = async (req, res, next) => {
       itinerary: copiedItinerary,
     });
   } catch (error) {
-    logger.error('Erro ao copiar roteiro:', error);
+    logger.error('Erro ao copiar roteiro');
     next(error);
   }
 };
@@ -146,7 +147,7 @@ exports.revokeShareLink = async (req, res) => {
 
     res.status(200).json({ message: 'Link removido. Roteiro agora é privado' });
   } catch (error) {
-    console.error('Erro ao revogar link:', error);
+    logger.error('Erro ao revogar link');
     res.status(500).json({ message: 'Erro ao revogar link' });
   }
 };
@@ -175,7 +176,7 @@ exports.getSharedItinerary = async (req, res) => {
 
     res.status(200).json(itinerary);
   } catch (error) {
-    console.error('Erro ao buscar roteiro compartilhado:', error);
+    logger.error('Erro ao buscar roteiro compartilhado');
     res.status(500).json({ message: 'Erro ao buscar roteiro' });
   }
 };

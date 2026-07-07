@@ -5,7 +5,16 @@
  */
 exports.paymentSuccess = (req, res) => {
   const { session_id } = req.query;
-  
+  const safeSessionId = String(session_id || '');
+  const escapeHtml = (value) =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  const safeSessionIdJson = JSON.stringify(safeSessionId);
+
   const html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -63,25 +72,25 @@ exports.paymentSuccess = (req, res) => {
     <h1>Pagamento Aprovado!</h1>
     <p>Sua assinatura Premium foi ativada.</p>
     <p>Você será redirecionado em instantes...</p>
-    ${session_id ? `<p class="session-id">Session ID: ${session_id}</p>` : ''}
+    ${safeSessionId ? `<p class="session-id">Session ID: ${escapeHtml(safeSessionId)}</p>` : ''}
   </div>
   <script>
     // Marcar como sucesso para o WebView detectar
     window.PAYMENT_SUCCESS = true;
-    window.SESSION_ID = '${session_id || ''}';
-    
+    window.SESSION_ID = ${safeSessionIdJson};
+
     // Tentar notificar o React Native (se disponível)
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify({
         type: 'PAYMENT_SUCCESS',
-        sessionId: '${session_id || ''}'
+        sessionId: ${safeSessionIdJson}
       }));
     }
   </script>
 </body>
 </html>
   `;
-  
+
   res.send(html);
 };
 
@@ -138,7 +147,7 @@ exports.paymentCancel = (req, res) => {
   <script>
     // Marcar como cancelado para o WebView detectar
     window.PAYMENT_CANCELLED = true;
-    
+
     // Tentar notificar o React Native (se disponível)
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -149,6 +158,6 @@ exports.paymentCancel = (req, res) => {
 </body>
 </html>
   `;
-  
+
   res.send(html);
 };
