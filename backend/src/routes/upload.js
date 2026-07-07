@@ -68,11 +68,9 @@ router.post('/', auth, upload.single('photo'), canUploadPhoto, async (req, res) 
 
     res.status(200).json({
       url: result.secure_url,
-      publicId: result.public_id,
     });
   } catch (error) {
-    console.error('❌ Erro ao fazer upload:', error);
-    console.error('❌ Stack:', error.stack);
+    console.error('❌ Erro ao fazer upload');
     res.status(500).json({ message: 'Erro ao fazer upload da foto' });
   }
 });
@@ -101,7 +99,6 @@ router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async
 
       return {
         url: result.secure_url,
-        publicId: result.public_id,
       };
     });
 
@@ -118,12 +115,12 @@ router.post('/multiple', auth, upload.array('photos', 10), canUploadPhoto, async
       const photoUrls = results.map((r) => r.url);
       req.itinerary.rating.photos.push(...photoUrls);
       await req.itinerary.save();
-      console.log(`📸 ${photoUrls.length} fotos adicionadas ao roteiro:`, req.itinerary._id);
+      console.log(`📸 ${photoUrls.length} fotos adicionadas ao roteiro`);
     }
 
     res.status(200).json({ photos: results });
   } catch (error) {
-    console.error('Erro ao fazer upload:', error);
+    console.error('Erro ao fazer upload de fotos');
     res.status(500).json({ message: 'Erro ao fazer upload das fotos' });
   }
 });
@@ -230,10 +227,7 @@ router.delete('/', auth, async (req, res) => {
         await cloudinary.uploader.destroy(publicId);
       }
     } catch (cloudinaryError) {
-      console.error(
-        'Falha ao remover imagem no Cloudinary (foto já removida do roteiro):',
-        cloudinaryError.message
-      );
+      console.error('Falha ao remover imagem no Cloudinary');
     }
 
     return res.status(200).json({
@@ -241,7 +235,7 @@ router.delete('/', auth, async (req, res) => {
       remainingPhotos: itinerary.rating.photos,
     });
   } catch (error) {
-    console.error('Erro ao remover foto do roteiro:', error);
+    console.error('Erro ao remover foto do roteiro');
     return res.status(500).json({ message: 'Erro ao remover foto do roteiro' });
   }
 });

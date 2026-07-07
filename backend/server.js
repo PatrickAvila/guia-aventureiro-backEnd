@@ -15,6 +15,12 @@ app.set('trust proxy', 1); // Confia no proxy do Render
 app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
 
+// Guardrail: nunca iniciar em produção com TEST_MODE habilitado
+if (process.env.NODE_ENV === 'production' && process.env.TEST_MODE === 'true') {
+  console.error('❌ Configuração inválida: TEST_MODE=true não é permitido em produção.');
+  process.exit(1);
+}
+
 // Middleware: Force HTTPS in production
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
