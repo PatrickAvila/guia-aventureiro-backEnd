@@ -3,13 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const sendAuthError = (res, statusCode, message, error) => {
-  const response = { message };
-
-  if (error && process.env.NODE_ENV !== 'production') {
-    response.debug = error.message;
-  }
-
-  return res.status(statusCode).json(response);
+  return res.status(statusCode).json({ message });
 };
 
 const auth = async (req, res, next) => {

@@ -5,23 +5,26 @@ const rateLimit = require('express-rate-limit');
  * Rate limiter para rotas de autenticação
  * Protege contra ataques de força bruta
  */
+const isProd = process.env.NODE_ENV === 'production';
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: process.env.NODE_ENV === 'test' ? 10000 : 5, // 10000 em testes, 5 em produção
+  max: isProd ? 5 : 100, // 5 em produção, 100 em desenvolvimento
   message: {
     message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Usar IP real quando atrás de proxy (ex: nginx, cloudflare)
   skipSuccessfulRequests: false,
-  // Ignorar completamente em modo de teste
   skip: (req) => {
-    if (process.env.TEST_MODE === 'true') {
-      return true;
+    // Ignorar completamente em modo de teste
+    if (process.env.TEST_MODE === 'true') return true;
+    // Em produção aplicar para todos; em dev ignorar localhost
+    if (!isProd) {
+      const ip = req.ip || req.connection?.remoteAddress || '';
+      return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
     }
-    const ip = req.ip || req.connection.remoteAddress;
-    return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+    return false;
   },
 });
 

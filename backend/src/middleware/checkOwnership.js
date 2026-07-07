@@ -12,7 +12,7 @@ const checkOwnership = async (req, res, next) => {
     // Verificar se é owner ou colaborador
     const isOwner = itinerary.owner.toString() === req.userId.toString();
     const isCollaborator = itinerary.collaborators.some(
-      collab => collab.user.toString() === req.userId.toString()
+      (collab) => collab.user.toString() === req.userId.toString()
     );
 
     if (!isOwner && !isCollaborator) {
@@ -22,11 +22,13 @@ const checkOwnership = async (req, res, next) => {
     // Verificar permissão de edição se for colaborador
     if (!isOwner && req.method !== 'GET') {
       const collaborator = itinerary.collaborators.find(
-        collab => collab.user.toString() === req.userId.toString()
+        (collab) => collab.user.toString() === req.userId.toString()
       );
 
       if (collaborator.permission !== 'edit') {
-        return res.status(403).json({ message: 'Você não tem permissão para editar este roteiro.' });
+        return res
+          .status(403)
+          .json({ message: 'Você não tem permissão para editar este roteiro.' });
       }
     }
 
@@ -34,7 +36,7 @@ const checkOwnership = async (req, res, next) => {
     req.isOwner = isOwner;
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao verificar permissões.', error: error.message });
+    res.status(500).json({ message: 'Erro ao verificar permissões.' });
   }
 };
 

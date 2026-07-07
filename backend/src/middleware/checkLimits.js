@@ -59,9 +59,7 @@ exports.canCreateItinerary = async (req, res, next) => {
 
     // Adicionar subscription ao request para uso posterior
     req.subscription = subscription;
-    console.log(
-      `✅ Middleware canCreateItinerary: subscription definida (plan: ${subscription.plan}, slots: ${subscription.usage.itineraries.current}/${subscription.usage.itineraries.limit}, criações: ${subscription.usage.aiGenerations.current}/${subscription.usage.aiGenerations.limit})`
-    );
+    logger.debug('Middleware canCreateItinerary executado com sucesso');
     next();
   } catch (error) {
     logger.error('Erro ao verificar limite de roteiros:', error);
@@ -113,10 +111,6 @@ exports.canUploadPhoto = async (req, res, next) => {
   try {
     const userId = req.userId;
     const itineraryId = req.body.itineraryId;
-
-    console.log('🔍 canUploadPhoto - userId:', userId);
-    console.log('🔍 canUploadPhoto - itineraryId:', itineraryId);
-    console.log('🔍 canUploadPhoto - req.body:', req.body);
 
     let subscription = await Subscription.findOne({ user: userId });
 
@@ -174,14 +168,14 @@ exports.canUploadPhoto = async (req, res, next) => {
         });
       }
 
-      console.log('✅ canUploadPhoto - req.itinerary setado:', itinerary._id);
+      logger.debug('canUploadPhoto: itinerary associado à requisição');
       req.itinerary = itinerary; // Passar roteiro para o próximo middleware
     } else {
-      console.log('⚠️ canUploadPhoto - Nenhum itineraryId fornecido');
+      logger.debug('canUploadPhoto: sem itineraryId na requisição');
     }
 
     req.subscription = subscription;
-    console.log('✅ canUploadPhoto - Chamando next()');
+    logger.debug('canUploadPhoto executado com sucesso');
     next();
   } catch (error) {
     logger.error('Erro ao verificar limite de fotos:', error);
