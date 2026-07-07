@@ -24,22 +24,25 @@ router.get('/stripe-config', subscriptionController.getStripeConfig);
 // Protegidas (requerem autenticação)
 router.get('/my-subscription', auth, subscriptionController.getMySubscription);
 router.get('/usage', auth, subscriptionController.getUsage);
-// Fluxo legado: permitido apenas em dev/test (controller bloqueia em produção)
-router.post('/upgrade', auth, subscriptionController.initiateUpgrade);
-router.post('/confirm-upgrade', auth, subscriptionController.confirmUpgrade);
 router.post('/cancel', auth, subscriptionController.cancelSubscription);
 router.post('/reactivate', auth, subscriptionController.reactivateSubscription);
+
+// Endpoint de automação: disponível apenas quando TEST_MODE=true
+if (process.env.TEST_MODE === 'true') {
+  router.post('/test/force-plan', auth, subscriptionController.forcePlanForTests);
+}
 
 // ========================================
 // STRIPE ROUTES
 // ========================================
 
 // Criar sessão de checkout Stripe
-router.post('/create-checkout', auth, checkoutLimiter, subscriptionController.createCheckoutSession);
-
-// NOVA ABORDAGEM - Para app mobile (funciona sem conta ativada!)
-router.post('/create-setup-intent', auth, subscriptionController.createSetupIntent);
-router.post('/confirm-payment', auth, subscriptionController.confirmPayment);
+router.post(
+  '/create-checkout',
+  auth,
+  checkoutLimiter,
+  subscriptionController.createCheckoutSession
+);
 
 // Customer Portal (gerenciar assinatura)
 router.post('/customer-portal', auth, subscriptionController.createCustomerPortalSession);

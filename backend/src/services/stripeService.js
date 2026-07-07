@@ -257,10 +257,10 @@ const syncSubscriptionStatus = async (userId) => {
 
     // Atualizar status local
     const statusMap = {
-      'active': 'active',
-      'canceled': 'canceled',
-      'past_due': 'past_due',
-      'incomplete': 'incomplete',
+      active: 'active',
+      canceled: 'canceled',
+      past_due: 'past_due',
+      incomplete: 'incomplete',
     };
 
     subscription.paymentStatus = statusMap[stripeSubscription.status] || 'pending';
@@ -282,118 +282,6 @@ const syncSubscriptionStatus = async (userId) => {
   }
 };
 
-/**
- * Cria um SetupIntent para coletar método de pagamento no app mobile
- * Funciona em modo TEST sem conta ativada!
- * @param {string} userId - ID do usuário
- * @returns {Promise<{clientSecret: string, customerId: string}>}
- */
-const createSetupIntent = async (userId) => {
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
-
-    const subscription = await Subscription.findOne({ user: userId });
-    if (!subscription) {
-      throw new Error('Assinatura não encontrada');
-    }
-
-    // Validar se já é Premium
-    if (subscription.plan === 'premium' && subscription.paymentStatus === 'active') {
-      throw new Error('Usuário já possui plano Premium ativo');
-    }
-
-    // Buscar ou criar customer
-    let stripeCustomerId = subscription.stripeCustomerId;
-    
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name,
-        metadata: {
-          userId: userId.toString(),
-        },
-      });
-      stripeCustomerId = customer.id;
-      subscription.stripeCustomerId = stripeCustomerId;
-      await subscription.save();
-    }
-
-    // Criar SetupIntent
-    const setupIntent = await stripe.setupIntents.create({
-      customer: stripeCustomerId,
-      payment_method_types: ['card'],
-      metadata: {
-        userId: userId.toString(),
-      },
-    });
-
-    logger.info(`✅ SetupIntent criado para user ${userId}: ${setupIntent.id}`);
-
-    return {
-      clientSecret: setupIntent.client_secret,
-      customerId: stripeCustomerId,
-      setupIntentId: setupIntent.id,
-    };
-  } catch (error) {
-    logger.error(`❌ Erro ao criar SetupIntent: ${error.message}`);
-    throw error;
-  }
-};
-
-/**
- * Cria subscription após método de pagamento confirmado
- * @param {string} userId - ID do usuário
- * @param {string} paymentMethodId - ID do método de pagamento
- * @param {string} priceId - ID do preço no Stripe
- * @returns {Promise<Object>}
- */
-const createSubscriptionWithPaymentMethod = async (userId, paymentMethodId, priceId) => {
-  try {
-    const subscription = await Subscription.findOne({ user: userId });
-    if (!subscription || !subscription.stripeCustomerId) {
-      throw new Error('Customer Stripe não encontrado');
-    }
-
-    // Anexar método de pagamento ao customer
-    await stripe.paymentMethods.attach(paymentMethodId, {
-      customer: subscription.stripeCustomerId,
-    });
-
-    // Definir como método padrão
-    await stripe.customers.update(subscription.stripeCustomerId, {
-      invoice_settings: {
-        default_payment_method: paymentMethodId,
-      },
-    });
-
-    // Criar subscription
-    const stripeSubscription = await stripe.subscriptions.create({
-      customer: subscription.stripeCustomerId,
-      items: [{ price: priceId }],
-      metadata: {
-        userId: userId.toString(),
-      },
-      expand: ['latest_invoice.payment_intent'],
-    });
-
-    logger.info(`✅ Subscription criada via Payment Method para user ${userId}: ${stripeSubscription.id}`);
-
-    // O webhook customer.subscription.created fará o upgrade automático
-    
-    return {
-      subscriptionId: stripeSubscription.id,
-      status: stripeSubscription.status,
-      clientSecret: stripeSubscription.latest_invoice?.payment_intent?.client_secret,
-    };
-  } catch (error) {
-    logger.error(`❌ Erro ao criar subscription: ${error.message}`);
-    throw error;
-  }
-};
-
 module.exports = {
   createCheckoutSession,
   createCustomerPortal,
@@ -401,6 +289,4 @@ module.exports = {
   downgradeUserToFree,
   cancelSubscription,
   syncSubscriptionStatus,
-  createSetupIntent,
-  createSubscriptionWithPaymentMethod,
 };

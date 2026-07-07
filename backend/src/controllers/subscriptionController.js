@@ -6,16 +6,27 @@ const stripeService = require('../services/stripeService');
 const logger = require('../utils/logger');
 
 const buildSafeErrorResponse = (errorCode, message, error) => {
-  const response = {
+  return {
     error: errorCode,
     message,
   };
+};
 
-  if (process.env.NODE_ENV !== 'production') {
-    response.debug = error.message;
-  }
+const toSafeSubscription = (subscription) => {
+  if (!subscription) return null;
 
-  return response;
+  const safeSubscription =
+    typeof subscription.toObject === 'function' ? subscription.toObject() : { ...subscription };
+
+  delete safeSubscription.user;
+  delete safeSubscription.stripeCustomerId;
+  delete safeSubscription.stripeSubscriptionId;
+  delete safeSubscription.stripePriceId;
+  delete safeSubscription.metadata;
+  delete safeSubscription.history;
+  delete safeSubscription.__v;
+
+  return safeSubscription;
 };
 
 /**
@@ -55,7 +66,7 @@ exports.getMySubscription = async (req, res, next) => {
 
     res.json({
       subscription: {
-        ...subscription.toObject(),
+        ...toSafeSubscription(subscription),
         planDetails: plan,
       },
     });
@@ -139,100 +150,36 @@ exports.getUsage = async (req, res, next) => {
 };
 
 /**
- * POST /api/subscriptions/upgrade
- * Iniciar processo de upgrade (seria conectado com Stripe)
+ * POST /api/subscriptions/test/force-plan
+ * Endpoint exclusivo para automação em TEST_MODE.
  */
-exports.initiateUpgrade = async (req, res, next) => {
+exports.forcePlanForTests = async (req, res, next) => {
   try {
-    const isProduction = process.env.NODE_ENV === 'production' && process.env.TEST_MODE !== 'true';
-    if (isProduction) {
-      return res.status(410).json({
-        error: 'deprecated_upgrade_flow',
-        message: 'Fluxo temporário desativado em produção. Use Stripe Checkout.',
-        action: 'POST /api/checkout/create-session',
-      });
+    if (process.env.TEST_MODE !== 'true') {
+      return res.status(404).json({ error: 'not_found' });
     }
 
     const userId = req.userId;
-    const { targetPlan, billingCycle } = req.body;
+    const { targetPlan, billingCycle = 'monthly' } = req.body;
 
-    if (!isValidPlan(targetPlan)) {
-      return res.status(400).json({ message: 'Plano inválido' });
-    }
-
-    if (targetPlan === 'free') {
-      return res.status(400).json({ message: 'Não é possível fazer upgrade para plano gratuito' });
+    if (!isValidPlan(targetPlan) || targetPlan === 'free') {
+      return res.status(400).json({ message: 'Plano de teste inválido' });
     }
 
     if (!['monthly', 'yearly'].includes(billingCycle)) {
       return res.status(400).json({ message: 'Ciclo de cobrança inválido' });
     }
 
-    const subscription = await Subscription.findOne({ user: userId });
-
+    let subscription = await Subscription.findOne({ user: userId });
     if (!subscription) {
-      return res.status(404).json({ message: 'Subscription não encontrada' });
+      subscription = await Subscription.createFreeSubscription(userId);
     }
 
-    const plan = getPlan(targetPlan);
-
-    // TODO: Integrar com Stripe para criar checkout session
-    // Por enquanto, retornar informações para o frontend
-
-    res.json({
-      message: 'Upgrade iniciado',
-      redirectUrl: '/api/subscriptions/checkout', // Seria URL do Stripe
-      plan: {
-        id: targetPlan,
-        name: plan.name,
-        price: plan.price[billingCycle],
-        billingCycle,
-      },
-      // Temporário: fazer upgrade direto (remover quando Stripe estiver integrado)
-      temporaryUpgrade: {
-        message: 'Em produção, isso redirecionaria para checkout do Stripe',
-        action: 'POST /api/subscriptions/confirm-upgrade',
-      },
-    });
-  } catch (error) {
-    logger.error('Erro ao iniciar upgrade:', error);
-    next(error);
-  }
-};
-
-/**
- * POST /api/subscriptions/confirm-upgrade
- * Confirmar upgrade (temporário, até integrar Stripe)
- */
-exports.confirmUpgrade = async (req, res, next) => {
-  try {
-    const isProduction = process.env.NODE_ENV === 'production' && process.env.TEST_MODE !== 'true';
-    if (isProduction) {
-      return res.status(410).json({
-        error: 'deprecated_upgrade_flow',
-        message: 'Fluxo temporário desativado em produção. Use Stripe Checkout.',
-      });
-    }
-
-    const userId = req.userId;
-    const { targetPlan, billingCycle } = req.body;
-
-    if (!isValidPlan(targetPlan)) {
-      return res.status(400).json({ message: 'Plano inválido' });
-    }
-
-    const subscription = await Subscription.findOne({ user: userId });
-
-    if (!subscription) {
-      return res.status(404).json({ message: 'Subscription não encontrada' });
-    }
-
-    // Fazer upgrade
     subscription.upgrade(targetPlan);
-    subscription.billingCycle = billingCycle || 'monthly';
-    subscription.paymentMethod = 'stripe'; // Temporário
+    subscription.billingCycle = billingCycle;
+    subscription.status = 'active';
+    subscription.paymentStatus = 'active';
 
-    // Definir próxima data de cobrança
     const nextBilling = new Date();
     if (billingCycle === 'monthly') {
       nextBilling.setMonth(nextBilling.getMonth() + 1);
@@ -244,21 +191,20 @@ exports.confirmUpgrade = async (req, res, next) => {
 
     await subscription.save();
 
-    logger.log(`✨ Upgrade realizado: Usuário ${userId} -> ${targetPlan}`);
-
     res.json({
-      message: 'Upgrade realizado com sucesso!',
-      subscription: subscription.toObject(),
+      message: `Plano ${targetPlan} aplicado em modo de teste`,
+      subscription: toSafeSubscription(subscription),
     });
   } catch (error) {
-    logger.error('Erro ao confirmar upgrade:', error);
+    logger.error('Erro ao forçar plano de teste:', error);
     next(error);
   }
 };
 
 /**
  * POST /api/subscriptions/cancel
- * Cancelar assinatura
+ * Cancelar assinatura — agenda cancelamento no fim do período no Stripe
+ * (usuário mantém acesso até renewsAt; sem cobranças futuras)
  */
 exports.cancelSubscription = async (req, res, next) => {
   try {
@@ -273,6 +219,15 @@ exports.cancelSubscription = async (req, res, next) => {
 
     if (subscription.plan === 'free') {
       return res.status(400).json({ message: 'Não é possível cancelar plano gratuito' });
+    }
+
+    if (subscription.status === 'cancelled') {
+      return res.status(400).json({ message: 'Assinatura já está cancelada' });
+    }
+
+    // Se houver assinatura real no Stripe, agendar cancelamento no fim do período
+    if (subscription.stripeSubscriptionId) {
+      await stripeService.cancelSubscription(subscription.stripeSubscriptionId, false);
     }
 
     subscription.status = 'cancelled';
@@ -291,8 +246,8 @@ exports.cancelSubscription = async (req, res, next) => {
 
     res.json({
       message: 'Assinatura cancelada. Você terá acesso até o fim do período pago.',
-      subscription: subscription.toObject(),
-      accessUntil: subscription.endDate,
+      subscription: toSafeSubscription(subscription),
+      accessUntil: subscription.renewsAt || subscription.endDate,
     });
   } catch (error) {
     logger.error('Erro ao cancelar subscription:', error);
@@ -302,7 +257,8 @@ exports.cancelSubscription = async (req, res, next) => {
 
 /**
  * POST /api/subscriptions/reactivate
- * Reativar assinatura cancelada
+ * Reativa assinatura antes do período expirar (remove cancel_at_period_end no Stripe).
+ * Se a assinatura Stripe já expirou, retorna checkoutRequired para o app abrir novo checkout.
  */
 exports.reactivateSubscription = async (req, res, next) => {
   try {
@@ -316,6 +272,31 @@ exports.reactivateSubscription = async (req, res, next) => {
 
     if (subscription.status !== 'cancelled') {
       return res.status(400).json({ message: 'Assinatura não está cancelada' });
+    }
+
+    // Se houver assinatura Stripe, tentar reativar removendo o cancel_at_period_end
+    if (subscription.stripeSubscriptionId) {
+      const stripe = require('../config/stripe');
+
+      let stripeSub;
+      try {
+        stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+      } catch (_) {
+        stripeSub = null;
+      }
+
+      if (!stripeSub || stripeSub.status === 'canceled') {
+        // Assinatura já expirou no Stripe — precisa de novo checkout
+        return res.status(200).json({
+          checkoutRequired: true,
+          message: 'Sua assinatura expirou. Inicie um novo checkout para assinar novamente.',
+        });
+      }
+
+      // Assinatura ainda existe — apenas remove o agendamento de cancelamento
+      await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+        cancel_at_period_end: false,
+      });
     }
 
     subscription.status = 'active';
@@ -333,7 +314,7 @@ exports.reactivateSubscription = async (req, res, next) => {
 
     res.json({
       message: 'Assinatura reativada com sucesso!',
-      subscription: subscription.toObject(),
+      subscription: toSafeSubscription(subscription),
     });
   } catch (error) {
     logger.error('Erro ao reativar subscription:', error);
@@ -405,8 +386,8 @@ exports.createCheckoutSession = async (req, res) => {
     }
 
     const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    const successUrl = `${normalizedBaseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${normalizedBaseUrl}/payment/cancel`;
+    const successUrl = `${normalizedBaseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${normalizedBaseUrl}/api/checkout/cancel`;
 
     // Criar checkout session
     const { sessionId, url } = await stripeService.createCheckoutSession(
@@ -440,99 +421,7 @@ exports.createCheckoutSession = async (req, res) => {
       message: 'Erro ao criar checkout',
     };
 
-    if (process.env.NODE_ENV !== 'production') {
-      response.details = error.message;
-    }
-
     res.status(500).json(response);
-  }
-};
-
-/**
- * POST /api/subscriptions/create-setup-intent
- * Cria SetupIntent para coletar método de pagamento no app mobile
- * FUNCIONA EM MODO TEST SEM CONTA ATIVADA!
- */
-exports.createSetupIntent = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    logger.info(`🔄 Criando SetupIntent para user ${userId}`);
-
-    const result = await stripeService.createSetupIntent(userId);
-
-    logger.info(`✅ SetupIntent criado para user ${userId}: ${result.setupIntentId}`);
-
-    res.json({
-      clientSecret: result.clientSecret,
-      customerId: result.customerId,
-      setupIntentId: result.setupIntentId,
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-    });
-  } catch (error) {
-    logger.error(`❌ Erro em createSetupIntent: ${error.message}`);
-
-    if (error.message.includes('já possui')) {
-      return res.status(400).json({
-        error: 'already_premium',
-        message: 'Você já possui um plano Premium ativo',
-      });
-    }
-
-    res
-      .status(500)
-      .json(
-        buildSafeErrorResponse(
-          'setup_intent_creation_failed',
-          'Não foi possível iniciar a configuração de pagamento no momento',
-          error
-        )
-      );
-  }
-};
-
-/**
- * POST /api/subscriptions/confirm-payment
- * Confirma pagamento e cria subscription
- * Body: { paymentMethodId }
- */
-exports.confirmPayment = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const { paymentMethodId } = req.body;
-
-    if (!paymentMethodId) {
-      return res.status(400).json({ error: 'payment_method_required' });
-    }
-
-    logger.info(`🔄 Confirmando pagamento para user ${userId}`);
-
-    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
-    const result = await stripeService.createSubscriptionWithPaymentMethod(
-      userId,
-      paymentMethodId,
-      priceId
-    );
-
-    logger.info(`✅ Subscription criada para user ${userId}: ${result.subscriptionId}`);
-
-    res.json({
-      subscriptionId: result.subscriptionId,
-      status: result.status,
-      clientSecret: result.clientSecret,
-    });
-  } catch (error) {
-    logger.error(`❌ Erro em confirmPayment: ${error.message}`);
-
-    res
-      .status(500)
-      .json(
-        buildSafeErrorResponse(
-          'payment_confirmation_failed',
-          'Não foi possível confirmar o pagamento no momento',
-          error
-        )
-      );
   }
 };
 

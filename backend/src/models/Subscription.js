@@ -180,12 +180,10 @@ subscriptionSchema.methods.canUploadPhoto = function () {
 };
 
 subscriptionSchema.methods.incrementUsage = function (type) {
-  console.log(`🔼 incrementUsage chamado para tipo: ${type}`);
   if (this.usage[type]) {
     const oldValue = this.usage[type].current;
     this.usage[type].current += 1;
     this.markModified(`usage.${type}`);
-    console.log(`   ${type}.current: ${oldValue} → ${this.usage[type].current}`);
   }
 };
 
