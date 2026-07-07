@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 MD032 MD031 MD040 -->
+
 # GUIA DE IMPLEMENTAÇÃO - PRODUÇÃO READY
 
 ## 🎯 Garantia: Mesmo Código para Teste e Produção
@@ -7,9 +9,11 @@ Este guia garante que o código implementado agora funcionará em produção SEM
 **Única diferença:** Variáveis de ambiente (chaves Stripe TEST → PRODUCTION)
 
 Template recomendado para produção do backend:
+
 - `backend/.env.production.example`
 
 Checklist executável de ativação Stripe Live:
+
 - [STRIPE_GO_LIVE_CHECKLIST.md](./STRIPE_GO_LIVE_CHECKLIST.md)
 
 ---
@@ -71,70 +75,21 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { CardField, useConfirmSetupIntent } from '@stripe/stripe-react-native';
+import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 
 export default function UpgradeScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const [cardComplete, setCardComplete] = useState(false);
-  const { confirmSetupIntent } = useConfirmSetupIntent();
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const handleUpgrade = async () => {
-    if (!cardComplete) {
-      Alert.alert('Atenção', 'Por favor, preencha os dados do cartão.');
-      return;
-    }
-
     try {
       setLoading(true);
 
-      // PASSO 1: Criar SetupIntent no backend
-      // ✅ Mesmo endpoint em TEST e PRODUCTION
-      const { data: setupData } = await api.post('/subscriptions/create-setup-intent');
-      const { clientSecret } = setupData;
-
-      // PASSO 2: Confirmar cartão com Stripe SDK
-      // ✅ Stripe processa em TEST ou PRODUCTION automaticamente
-      const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
-        paymentMethodType: 'Card',
-      });
-
-      if (error) {
-        Alert.alert('Erro no Pagamento', error.message);
-        setLoading(false);
-        return;
-      }
-
-      if (!setupIntent?.paymentMethodId) {
-        Alert.alert('Erro', 'Não foi possível processar o pagamento.');
-        setLoading(false);
-        return;
-      }
-
-      // PASSO 3: Criar subscription no backend
-      // ✅ Mesmo endpoint em TEST e PRODUCTION
-      const { data: subscriptionData } = await api.post('/subscriptions/confirm-payment', {
-        paymentMethodId: setupIntent.paymentMethodId,
-      });
-
-      // PASSO 4: Sucesso!
-      // Webhook processará automaticamente e atualizará assinatura
-      Alert.alert(
-        '🎉 Bem-vindo ao Premium!',
-        'Seu pagamento foi confirmado com sucesso. Aproveite todos os benefícios!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Recarregar dados do usuário para atualizar status Premium
-              // Suas funções de reload aqui
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      const { data } = await api.post('/subscriptions/create-checkout');
+      setCheckoutUrl(data.url);
 
     } catch (error: any) {
       console.error('Erro no upgrade:', error);
@@ -150,6 +105,10 @@ export default function UpgradeScreen() {
       setLoading(false);
     }
   };
+
+  if (checkoutUrl) {
+    return <WebView source={{ uri: checkoutUrl }} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -309,6 +268,7 @@ import UpgradeScreen from './screens/UpgradeScreen';
 ### Desenvolvimento (TEST)
 
 **backend/.env:**
+
 ```env
 # Stripe TEST keys (já configurado)
 STRIPE_SECRET_KEY=sk_test_51T4SHQRunOGW68vf...
@@ -320,6 +280,7 @@ STRIPE_WEBHOOK_SECRET=whsec_b87ccc26cfe76898...
 ### Produção (LIVE)
 
 **backend/.env:**
+
 ```env
 # Stripe LIVE keys (quando ativar conta)
 STRIPE_SECRET_KEY=sk_live_51T4SHQRunOGW68vf...
@@ -337,21 +298,25 @@ STRIPE_WEBHOOK_SECRET=whsec_XXXXX (criar webhook em prod)
 Use estes cartões para simular diferentes cenários:
 
 ### Sucesso
+
 ```
 4242 4242 4242 4242  → Pagamento aprovado
 ```
 
 ### Pagamento Recusado
+
 ```
 4000 0000 0000 0002  → Cartão recusado
 ```
 
 ### Autenticação 3D Secure
+
 ```
 4000 0025 0000 3155  → Requer autenticação
 ```
 
 ### Cartão Expirado
+
 ```
 4000 0000 0000 0069  → Cartão expirado
 ```
@@ -383,6 +348,7 @@ Quando for migrar para produção:
 ## 🧪 TESTE COMPLETO AGORA
 
 **1. Instalar no app:**
+
 ```bash
 cd mobile
 npm install @stripe/stripe-react-native
@@ -391,6 +357,7 @@ npm install @stripe/stripe-react-native
 **2. Copiar código acima** (App.tsx e UpgradeScreen.tsx)
 
 **3. Testar no app:**
+
 - Abrir tela de Upgrade
 - Preencher cartão: 4242 4242 4242 4242
 - Data: 12/30
@@ -398,16 +365,19 @@ npm install @stripe/stripe-react-native
 - Clicar "Assinar Premium"
 
 **4. Resultado esperado:**
+
 - Loading enquanto processa
 - Alert: "🎉 Bem-vindo ao Premium!"
 - Assinatura atualizada automaticamente
 
 **5. Verificar no backend:**
+
 ```bash
 node automation/check-sub-native.js
 ```
 
 Deve mostrar:
+
 ```
 Plan: premium ✅
 Status: active ✅
@@ -418,6 +388,7 @@ Status: active ✅
 ## 🎯 GARANTIA
 
 Este código:
+
 - ✅ Funciona em TEST mode (agora)
 - ✅ Funciona em PRODUCTION mode (depois)
 - ✅ Não precisa ser modificado

@@ -113,16 +113,12 @@ Protegidas:
 
 - `GET /subscriptions/my-subscription`
 - `GET /subscriptions/usage`
-- `POST /subscriptions/upgrade` (fluxo legado; bloqueado em producao)
-- `POST /subscriptions/confirm-upgrade` (fluxo legado; bloqueado em producao)
 - `POST /subscriptions/cancel`
 - `POST /subscriptions/reactivate`
 
 Fluxo Stripe (protegido):
 
 - `POST /subscriptions/create-checkout`
-- `POST /subscriptions/create-setup-intent`
-- `POST /subscriptions/confirm-payment`
 - `POST /subscriptions/customer-portal`
 - `POST /subscriptions/cancel-stripe`
 - `GET /subscriptions/stripe-status`
