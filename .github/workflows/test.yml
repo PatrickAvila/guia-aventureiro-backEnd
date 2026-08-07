@@ -106,8 +106,11 @@ jobs:
             return 1
           }
 
-          try_start_backend "mongodb://127.0.0.1:27017/guia-aventureiro-test" \
-            || try_start_backend "mongodb://mongodb:27017/guia-aventureiro-test"
+          if ! try_start_backend "mongodb://127.0.0.1:27017/guia-aventureiro-test" \
+            && ! try_start_backend "mongodb://mongodb:27017/guia-aventureiro-test"; then
+            echo "⚠️ Não foi possível confirmar healthcheck no bootstrap. Continuando para os testes, que validarão a disponibilidade da API."
+            cat /tmp/backend.log || true
+          fi
 
       - name: 🧪 Executar Testes com Retry
         working-directory: ./automation
