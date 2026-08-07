@@ -12,6 +12,7 @@
 - 📋 **Planejadas:** 8 features
 
 ### 🎯 **Marcos Alcançados:**
+
 - ✅ MVP 100% funcional
 - ✅ Backend em produção (Render.com)
 - ✅ Mobile pronto para build
@@ -32,6 +33,7 @@
 ### ~~0. Deploy em Produção~~ 🚀 **CONCLUÍDO - 29/12/2025**
 
 **Infraestrutura implementada:**
+
 - ✅ Backend deployado no Render.com (plano Free)
 - ✅ URL produção: https://guia-aventureiro-backend.onrender.com
 - ✅ MongoDB Atlas otimizado (32 índices)
@@ -42,6 +44,7 @@
 - ✅ Repositórios separados (backend + mobile)
 
 **Métricas:**
+
 - Build time: ~2 minutos
 - Memory usage: 93 MB
 - Cold start: 30-60 segundos (plano Free)
@@ -49,6 +52,7 @@
 - Logs: Production mode (warn/error)
 
 **Arquivos:**
+
 - `backend/server.js` (mongoose import fix)
 - `backend/package.json` (winston dependency)
 - `mobile/src/config/env.ts` (prod API URL)
@@ -59,6 +63,7 @@
 ### ~~1. Sistema de Busca de Destinos~~ ✅ **CONCLUÍDO - 24/12/2025**
 
 **Features implementadas:**
+
 - ✅ Autocomplete de cidades usando Google Places API
 - ✅ Sugestões de destinos populares (15 cidades mockadas)
 - ✅ Debounce de 500ms para otimizar requisições
@@ -67,6 +72,7 @@
 - ✅ Campos manuais como alternativa
 
 **Arquivos:**
+
 - `mobile/src/services/placesService.ts`
 - `mobile/src/components/PlaceAutocomplete.tsx`
 
@@ -75,6 +81,7 @@
 ### ~~2. Upload de Fotos nos Roteiros~~ ✅ **CONCLUÍDO - 24/12/2025**
 
 **Features implementadas:**
+
 - ✅ Upload de fotos para Cloudinary
 - ✅ Galeria de fotos por roteiro (até 10 fotos)
 - ✅ Seleção da câmera ou galeria
@@ -83,6 +90,7 @@
 - ✅ Preview e remoção de fotos
 
 **Arquivos:**
+
 - `mobile/src/services/photoService.ts`
 - `mobile/src/components/PhotoPicker.tsx`
 - `backend/src/routes/upload.js`
@@ -90,8 +98,10 @@
 ---
 
 ### ~~3. Modo Offline~~ ✅ **CONCLUÍDO**
-**Implementado em:** 24/12/2025 - 24/12/2025**
+
+**Implementado em:** 24/12/2025 - 24/12/2025\*\*
 **Features implementadas:**
+
 - ✅ Cache de roteiros no AsyncStorage
 - ✅ Sincronização automática ao voltar online
 - ✅ Indicador visual de status offline/online
@@ -100,17 +110,20 @@
 - ✅ Contador de ações pendentes
 
 **Arquivos:**
+
 - `mobile/src/services/offlineService.ts`
 - `mobile/src/components/OfflineIndicator.tsx`
 
 ---
 
 ### ~~4. Onboarding e Tutorial~~ ✅ **CONCLUÍDO**
+
 **Implementado em:** 24/12/2025 (inicial) | 11/02/2026 (sistema híbrido completo)
 
 **Sistema Híbrido de Tutorial:**
 
 **Onboarding Inicial (5 slides):**
+
 - ✅ Tutorial interativo com swiper
 - ✅ Navegação por swipe e botão
 - ✅ Botão "Pular" disponível
@@ -119,6 +132,7 @@
 - ✅ Cores e ícones ilustrativos
 
 **Tooltips Contextuais (5 tooltips):**
+
 - ✅ Componente Tooltip reutilizável com animações
 - ✅ Efeito spotlight com overlay escurecido
 - ✅ DashboardScreen: "Criar primeiro roteiro"
@@ -131,6 +145,7 @@
 - ✅ Botão "Rever Tutorial" com reset completo
 
 **Arquivos:**
+
 - `mobile/src/screens/OnboardingScreen.tsx`
 - `mobile/src/navigation/RootNavigator.tsx`
 - `mobile/src/components/Tooltip.tsx` (novo)
@@ -144,6 +159,7 @@
 --# ~~5. Temas Escuro/Claro~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Context API para tema global
 - ✅ Toggle animado de tema
 - ✅ Cores consistentes em todo o app
@@ -151,6 +167,7 @@
 - ✅ Sistema de cores unificado com useColors hook
 
 **Arquivos:**
+
 - `mobile/src/context/ThemeContext.tsx`
 - `mobile/src/hooks/useColors.ts`
 - `mobile/src/components/ThemeToggle.tsx`
@@ -160,12 +177,14 @@
 ### ~~6. Sistema de Alertas Customizados~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Alertas customizados substituindo Alert nativo
 - ✅ Suporte a múltiplos botões com estilos
 - ✅ Integração com tema claro/escuro
 - ✅ Provider global (AlertProvider)
 
 **Arquivos:**
+
 - `mobile/src/components/CustomAlert.tsx`
 - `mobile/src/components/AlertProvider.tsx`
 
@@ -174,12 +193,14 @@
 ### ~~7. Otimizações de Performance~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Skeleton loaders em todas as listas
 - ✅ Debounce em buscas (500ms)
 - ✅ Lazy loading de componentes
 - ✅ Memoização de listas grandes
 
 **Arquivos:**
+
 - `mobile/src/components/SkeletonLoader.tsx`
 - `mobile/src/utils/debounce.ts`
 
@@ -188,12 +209,14 @@
 ### ~~8. Rate Limiting e Segurança~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Rate limiting global (100 req/15min)
 - ✅ Helmet para headers seguros
 - ✅ IP blocking para requisições suspeitas
 - ✅ Logging de requisições
 
 **Arquivos:**
+
 - `backend/src/middleware/rateLimiter.js`
 - `backend/src/middleware/ipBlocker.js`
 - `backend/src/middleware/requestLogger.js`
@@ -203,12 +226,14 @@
 ### ~~9. Validação de Senha Forte~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Validação de senha forte no mobile
 - ✅ Indicadores visuais de força
 - ✅ Mensagens de erro específicas
 - ✅ Validação em tempo real
 
 **Arquivos:**
+
 - `mobile/src/utils/passwordValidator.ts`
 
 ---
@@ -216,12 +241,14 @@
 ### ~~10. Sistema de Logging~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Winston logger no backend
 - ✅ Logs em arquivo (combined.log, error.log)
 - ✅ Logger mobile com AsyncStorage
 - ✅ Níveis de log configuráveis
 
 **Arquivos:**
+
 - `backend/src/utils/logger.js`
 - `mobile/src/utils/logger.ts`
 
@@ -230,12 +257,14 @@
 ### ~~11. Tratamento de Sessão Expirada~~ ✅ **CONCLUÍDO - 26/12/2025**
 
 **Features implementadas:**
+
 - ✅ Interceptor para token expirado
 - ✅ Redirecionamento automático para login
 - ✅ Limpeza de dados ao expirar
 - ✅ Mensagem de aviso ao usuário
 
 **Arquivos:**
+
 - `mobile/src/services/api.ts`
 - `mobile/src/context/AuthContext.tsx`
 
@@ -244,6 +273,7 @@
 ### ~~12. Sistema de Avaliações~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Avaliação de roteiros (1-5 estrelas)
 - ✅ Comentários e fotos nas avaliações
 - ✅ Highlights (melhor, pior experiência, dica)
@@ -251,11 +281,13 @@
 - ✅ Estatísticas de avaliação
 
 **Arquivos Backend:**
+
 - `backend/src/models/Rating.js`
 - `backend/src/controllers/ratingController.js`
 - `backend/src/routes/ratings.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/services/ratingService.ts`
 - `mobile/src/components/RatingStars.tsx`
 - `mobile/src/components/RatingModal.tsx`
@@ -265,6 +297,7 @@
 ### ~~13. Compartilhamento de Roteiros~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Geração de links públicos para roteiros
 - ✅ Compartilhamento via WhatsApp
 - ✅ Compartilhamento nativo (apps instalados)
@@ -272,9 +305,11 @@
 - ✅ Copiar roteiro compartilhado
 
 **Arquivos Backend:**
+
 - `backend/src/controllers/shareController.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/components/ShareModal.tsx`
 
 ---
@@ -282,12 +317,14 @@
 ### ~~14. Validação de Entrada~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ express-validator instalado
 - ✅ Validators para auth, itineraries, ratings
 - ✅ Middleware de validação
 - ✅ Mensagens de erro padronizadas
 
 **Arquivos:**
+
 - `backend/src/middleware/validators.js`
 - Rotas auth, itineraries, ratings atualizadas
 
@@ -296,12 +333,14 @@
 ### ~~15. Paginação + Infinite Scroll~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Backend com paginação (page, limit, sortBy)
 - ✅ Metadados de paginação (total, pages, hasNext)
 - ✅ FlatList com onEndReached no mobile
 - ✅ Loading indicator no final da lista
 
 **Arquivos:**
+
 - `backend/src/controllers/itineraryController.js`
 - `mobile/src/services/itineraryService.ts`
 
@@ -310,6 +349,7 @@
 ### ~~16. Explorar Roteiros Públicos~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Feed de roteiros públicos de outros usuários
 - ✅ Tabs: Descobrir, Em Alta, Salvos
 - ✅ Sistema de likes em roteiros
@@ -318,10 +358,12 @@
 - ✅ Busca de roteiros
 
 **Arquivos Backend:**
+
 - `backend/src/controllers/exploreController.js`
 - `backend/src/routes/explore.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/ExploreScreen.tsx`
 - `mobile/src/services/exploreService.ts`
 
@@ -330,6 +372,7 @@
 ### ~~17. Gamificação~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Sistema de conquistas (achievements)
 - ✅ 20 badges diferentes
 - ✅ Níveis e pontos de experiência
@@ -338,11 +381,13 @@
 - ✅ Tela de conquistas no mobile
 
 **Arquivos Backend:**
+
 - `backend/src/models/Achievement.js`
 - `backend/src/controllers/achievementController.js`
 - `backend/src/routes/achievements.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/AchievementsScreen.tsx`
 - `mobile/src/services/achievementService.ts`
 - `mobile/src/components/BadgeItem.tsx`
@@ -354,12 +399,14 @@
 **Bugs corrigidos:** 23 bugs
 
 **Padrões implementados:**
+
 - ✅ useCallback em funções de useEffect (8 telas)
 - ✅ Validação de arrays antes de .map/.filter/.reduce (4 controllers backend)
 - ✅ Optional chaining para objetos (8 telas frontend)
 - ✅ Normalização de respostas de API
 
 **Impacto:**
+
 - Zero loops infinitos em re-renders
 - Zero crashes por arrays/objetos undefined
 - Código defensivo e resiliente
@@ -369,6 +416,7 @@
 ### ~~19. IA Real com Groq (Llama 3.3)~~ ✅ **CONCLUÍDO - 29/12/2025**
 
 **Features implementadas:**
+
 - ✅ Integração com Groq AI (grátis + rápido)
 - ✅ Modelo Llama 3.3 70B Versatile (mais recente)
 - ✅ Geração de roteiros personalizados em 1-2 segundos
@@ -378,11 +426,13 @@
 - ✅ Cache de health check (10s) para otimizar requisições
 
 **Estratégia de Fases:**
+
 - **Fase 1 (MVP):** Groq gratuito
 - **Fase 2 (Beta):** Groq + cache de roteiros
 - **Fase 3 (Premium):** Free tier com Groq (5 roteiros) + Premium com GPT-4
 
 **Arquivos:**
+
 - `backend/src/services/aiService.js`
 - `backend/.env` (GROQ_API_KEY)
 - `mobile/src/services/offlineService.ts` (cache optimization)
@@ -390,6 +440,7 @@
 **Setup:** Obter chave grátis em https://console.groq.com/keys
 
 **Otimizações:**
+
 - ✅ Health check com cache de 10 segundos
 - ✅ Correção de loops infinitos em 7 telas
 - ✅ useEffect/useFocusEffect com dependências corretas
@@ -403,9 +454,11 @@
 ## 🚀 PRIORIDADE ALTA
 
 ### ~~1. Implementar IA Real (OpenAI)~~ ✅ **CONCLUÍDO - 29/12/2025**
+
 **Implementado com Groq AI (Llama 3.1 70B) - Melhor que planejado!**
 
 **Por quê escolhemos Groq:**
+
 - ✅ GRÁTIS (14,400 req/dia) vs OpenAI pago
 - ✅ 3-5x MAIS RÁPIDO (1-2s vs 5-10s)
 - ✅ Qualidade superior ao GPT-3.5
@@ -413,6 +466,7 @@
 - ✅ JSON mode nativo
 
 **Implementado:**
+
 - ✅ Roteiros personalizados com IA real
 - ✅ Prompts inteligentes baseados em preferências
 - ✅ Recomendações de restaurantes e atrações
@@ -420,6 +474,7 @@
 - ✅ Custos estimados por atividade
 
 **Arquivos:**
+
 - [backend/src/services/aiService.js](backend/src/services/aiService.js)
 - backend/.env (GROQ_API_KEY)
 
@@ -430,6 +485,7 @@
 **Features implementadas:**
 
 **Backend:**
+
 - ✅ Modelo Subscription com histórico e limites
 - ✅ 3 planos: Free, Premium, Pro
 - ✅ Configuração de limites em plans.js
@@ -440,6 +496,7 @@
 - ✅ Stripe ready (preparado para integração)
 
 **Mobile:**
+
 - ✅ PricingScreen.tsx - tela de planos
 - ✅ UsageScreen.tsx - tela de uso e limites
 - ✅ PlanBadge.tsx - badge do plano
@@ -449,6 +506,7 @@
 - ✅ useSubscription.ts - hook de gerenciamento
 
 **Arquivos Backend:**
+
 - `backend/src/config/plans.js`
 - `backend/src/models/Subscription.js`
 - `backend/src/controllers/subscriptionController.js`
@@ -456,6 +514,7 @@
 - `backend/src/middleware/checkLimits.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/PricingScreen.tsx`
 - `mobile/src/screens/UsageScreen.tsx`
 - `mobile/src/components/PlanBadge.tsx`
@@ -470,6 +529,7 @@
 ### ~~21. Orçamento Detalhado~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ BudgetScreen.tsx com gestão completa
 - ✅ BudgetTracker.tsx - componente de tracking
 - ✅ Resumo orçamento vs gasto
@@ -479,10 +539,12 @@
 - ✅ Integração com roteiros
 
 **Arquivos Backend:**
+
 - `backend/src/controllers/budgetController.js`
 - `backend/src/routes/budget.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/BudgetScreen.tsx`
 - `mobile/src/components/BudgetTracker.tsx`
 
@@ -491,6 +553,7 @@
 ### ~~22. Notificações Push~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ OneSignal integrado (backend + mobile)
 - ✅ Push notifications para eventos
 - ✅ NotificationsScreen.tsx - central de notificações
@@ -500,6 +563,7 @@
 - ✅ Hook useNotifications.ts
 
 **Arquivos Backend:**
+
 - `backend/src/models/DeviceToken.js`
 - `backend/src/models/Notification.js`
 - `backend/src/controllers/pushNotificationController.js`
@@ -510,6 +574,7 @@
 - `backend/src/services/notificationScheduler.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/NotificationsScreen.tsx`
 - `mobile/src/screens/NotificationSettingsScreen.tsx`
 - `mobile/src/services/pushNotificationService.ts`
@@ -521,6 +586,7 @@
 ### ~~23. Mapa Interativo~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ Google Maps integrado
 - ✅ MapScreen.tsx com visualização de pontos
 - ✅ Navegação entre locais do roteiro
@@ -528,10 +594,12 @@
 - ✅ Service de mapas
 
 **Arquivos Backend:**
+
 - `backend/src/controllers/mapController.js`
 - `backend/src/routes/maps.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/MapScreen.tsx`
 - `mobile/src/services/mapService.ts`
 
@@ -540,6 +608,7 @@
 ### ~~24. Chat Colaborativo~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ Chat em tempo real com Socket.io
 - ✅ Mensagens entre colaboradores
 - ✅ Model Message para persistência
@@ -548,6 +617,7 @@
 - ✅ Notificações de novas mensagens
 
 **Arquivos Backend:**
+
 - `backend/src/models/Message.js`
 - `backend/src/controllers/chatController.js`
 - `backend/src/routes/chat.js`
@@ -558,16 +628,19 @@
 ### ~~25. Recomendações Personalizadas~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ RecommendationsScreen.tsx
 - ✅ Sistema de recomendações baseado em histórico
 - ✅ Controller de recomendações
 - ✅ Integração com preferências do usuário
 
 **Arquivos Backend:**
+
 - `backend/src/controllers/recommendationController.js`
 - `backend/src/routes/recommendations.js`
 
 **Arquivos Mobile:**
+
 - `mobile/src/screens/RecommendationsScreen.tsx`
 
 ---
@@ -575,11 +648,13 @@
 ### ~~26. Analytics e Tracking~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ analyticsService.ts para tracking
 - ✅ Eventos de usuário rastreados
 - ✅ Integração pronta para Google Analytics/Mixpanel
 
 **Arquivos Mobile:**
+
 - `mobile/src/services/analyticsService.ts`
 
 ---
@@ -587,6 +662,7 @@
 ### ~~27. Sistema de Tooltips~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ Tooltip.tsx - componente reutilizável
 - ✅ useTooltip.ts - hook de gerenciamento
 - ✅ Tooltips contextuais em 5+ telas
@@ -594,6 +670,7 @@
 - ✅ Persistência de estado
 
 **Arquivos Mobile:**
+
 - `mobile/src/components/Tooltip.tsx`
 - `mobile/src/hooks/useTooltip.ts`
 
@@ -602,11 +679,13 @@
 ### ~~28. Componentes de UX~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ AdBanner.tsx - banners de ads (AdMob ready)
 - ✅ Melhorias em componentes existentes
 - ✅ Animações e transições
 
 **Arquivos Mobile:**
+
 - `mobile/src/components/AdBanner.tsx`
 
 ---
@@ -614,6 +693,7 @@
 ### ~~29. Testes Automatizados~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ 237 testes totais
 - ✅ 223 passing (94.1%)
 - ✅ 16 suites (100% passing)
@@ -623,6 +703,7 @@
 - ✅ Scripts utilitários
 
 **16 Test Suites:**
+
 - auth.test.js (21 testes)
 - itinerary.test.js (18 testes)
 - profile.test.js (12 testes, 5 skip)
@@ -641,9 +722,11 @@
 - security.test.js (13 testes)
 
 **Repositório:**
+
 - 🆕 https://github.com/PatrickAvila/guia-aventureiro-automation
 
 **Arquivos:**
+
 - `automation/` - repositório completo
 - `automation/README.md` - documentação de testes
 - `automation/tests/` - 16 test suites
@@ -654,6 +737,7 @@
 ### ~~30. Documentação Consolidada~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ SUBSCRIPTION.md - documentação unificada (700+ linhas)
 - ✅ CHANGELOG.md atualizado v1.0.6
 - ✅ README.md atualizado com badges e stats
@@ -663,6 +747,7 @@
 - ✅ Documentação de integração (Firebase, EAS)
 
 **Arquivos:**
+
 - `SUBSCRIPTION.md`
 - `CHANGELOG.md`
 - `README.md`
@@ -676,6 +761,7 @@
 ### ~~31. Contextos Refatorados~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ Migração de src/context/ para src/contexts/
 - ✅ AuthContext.tsx atualizado
 - ✅ ThemeContext.tsx atualizado
@@ -683,6 +769,7 @@
 - ✅ Arquitetura melhorada
 
 **Arquivos Mobile:**
+
 - `mobile/src/contexts/AuthContext.tsx`
 - `mobile/src/contexts/ThemeContext.tsx`
 - `mobile/src/contexts/NotificationsContext.tsx`
@@ -692,6 +779,7 @@
 ### ~~32. Configurações e Build~~ ✅ **CONCLUÍDO - 19/02/2026**
 
 **Features implementadas:**
+
 - ✅ App.tsx atualizado com providers
 - ✅ app.json configurado
 - ✅ Firebase configurado via EAS Secrets
@@ -701,6 +789,7 @@
 - ✅ Dependências atualizadas
 
 **Arquivos Mobile:**
+
 - `mobile/App.tsx`
 - `mobile/app.json`
 - `mobile/.gitignore`
@@ -718,11 +807,13 @@
 ## 🚀 PRIORIDADE ALTA
 
 ### 1. **Build e Lançamento Beta** 📱
+
 **Prioridade:** ALTA
 **Tempo estimado:** 1-2 semanas
 **Impacto:** CRÍTICO
 
 **Tarefas:**
+
 - [ ] Build iOS via EAS (TestFlight)
 - [ ] Build Android via EAS (Google Play Beta)
 - [ ] Testes em dispositivos reais
@@ -736,7 +827,9 @@
 ## 💰 PRIORIDADE MÉDIA
 
 ### 2. **Integração Stripe para Pagamentos** 💳
+
 **Features:**
+
 - Checkout de planos Premium/Pro
 - Gerenciamento de assinaturas
 - Webhooks para renovação/cancelamento
@@ -750,7 +843,9 @@
 ---
 
 ### 3. **Integração com Calendário** 📅
+
 **Features:**
+
 - Adicionar roteiro ao Google Calendar
 - Sincronizar datas automaticamente
 - Lembretes automáticos
@@ -763,7 +858,9 @@
 ## 🔧 MELHORIAS TÉCNICAS
 
 ### 4. **CI/CD Pipeline** 🔄
+
 **O quê:**
+
 - Testes E2E (Detox/Playwright)
 - GitHub Actions para CI/CD
 - Deploy automático
@@ -777,7 +874,9 @@
 ---
 
 ### 5. **SEO e Landing Page** 🌐
+
 **Criar:**
+
 - Landing page com Next.js/React
 - Blog com dicas de viagem (SEO)
 - Página de destinos populares
@@ -791,14 +890,17 @@
 ## 💎 MONETIZAÇÃO
 
 ### 6. **Ativar Stripe e Aceitar Pagamentos** ✅ **PREPARADO**
+
 **Status:** Sistema de subscription completo, aguardando ativação Stripe
 
 **Planos Implementados:**
+
 - ✅ Free: 5 roteiros, 10 AI requests, 5 fotos
 - ✅ Premium: 20 roteiros, 50 AI requests, 20 fotos - R$ 9,90/mês
 - ✅ Pro: Ilimitado - R$ 19,90/mês
 
 **Próximos passos:**
+
 - [ ] Configurar conta Stripe
 - [ ] Implementar webhook handlers
 - [ ] Testar fluxo de pagamento
@@ -807,7 +909,9 @@
 ---
 
 ### 7. **Marketplace de Guias Locais** 🗣️
+
 **Modelo:**
+
 - Conectar viajantes com guias locais
 - Sistema de agendamento
 - Pagamento in-app (20% de comissão)
@@ -819,7 +923,9 @@
 ---
 
 ### 8. **Parcerias com Hotéis/Companhias Aéreas** ✈️
+
 **Modelo:**
+
 - Afiliação com Booking, Airbnb, Decolar
 - Ganhar comissão por reservas
 - Integração direta no app
@@ -833,7 +939,9 @@
 ## 📱 MARKETING & GROWTH
 
 ### **Programa de Indicação** 👥
+
 **Features:**
+
 - Ganhe 1 mês premium ao indicar amigo
 - Código de referência único
 - Dashboard de indicações
@@ -843,7 +951,9 @@
 ---
 
 ### **Conteúdo nas Redes Sociais** 📱
+
 **Estratégia:**
+
 - Instagram com dicas de viagem
 - TikTok com roteiros rápidos
 - YouTube com guias detalhados
@@ -854,7 +964,9 @@
 ---
 
 ### **Parcerias com Influencers** 🌟
+
 **Táticas:**
+
 - Enviar acesso premium para influencers de viagem
 - Criar roteiros em parceria
 - Código promocional exclusivo
@@ -871,6 +983,7 @@
 **Progresso:** 100% concluído (19 features principais)
 
 **Features MVP implementadas:**
+
 - ✅ Sistema de autenticação e perfis
 - ✅ Geração de roteiros com IA real (Groq)
 - ✅ Upload de fotos (Cloudinary)
@@ -890,6 +1003,7 @@
 **Progresso:** 100% concluído (13 features adicionais)
 
 **Features implementadas:**
+
 - ✅ Sistema de Subscription completo (Free/Premium/Pro)
 - ✅ Chat colaborativo em tempo real
 - ✅ Mapa interativo (Google Maps)
@@ -909,6 +1023,7 @@
 ---
 
 ### **MAR/2026: Beta Testing** 📋 EM PLANEJAMENTO
+
 - [ ] Build iOS/Android via EAS
 - [ ] Lançar versão beta (TestFlight/Play Store Beta)
 - [ ] Coletar feedback de 50-100 beta testers
@@ -921,6 +1036,7 @@
 ---
 
 ### **ABR/2026: Lançamento Oficial** 📋 PLANEJADO
+
 - [ ] Lançamento oficial (App Store + Play Store)
 - [ ] Marketing nas redes sociais
 - [ ] Programa de indicação
@@ -934,12 +1050,14 @@
 ## 🏆 MÉTRICAS DE SUCESSO
 
 **Beta Testing (Mar/2026):**
+
 - **Beta testers:** 50-100 usuários
 - **Feedback:** NPS > 50
 - **Bugs críticos:** 0
 - **Taxa de conclusão:** 80%+ completam onboarding
 
 **Lançamento Oficial (Abr/2026):**
+
 - **Cadastros:** 500+ no primeiro mês
 - **Roteiros criados:** 2000+ no primeiro trimestre
 - **Retenção D7:** 40%+
@@ -947,6 +1065,7 @@
 - **Conversão Premium:** 5%+
 
 **Crescimento (6 meses):**
+
 - **Downloads:** 5000+
 - **Usuários ativos (MAU):** 2000+
 - **Receita MRR:** R$ 1000+
@@ -959,6 +1078,7 @@
 **App 100% completo e pronto para beta!**
 
 **32 Features implementadas:**
+
 - ✅ Todas as features MVP (19)
 - ✅ Features avançadas (13)
 - ✅ Subscription system completo
@@ -967,6 +1087,7 @@
 - ✅ 3 repositórios Git organizados
 
 **Próximos passos:**
+
 1. 📋 Build iOS/Android via EAS
 2. 📋 Lançar beta (TestFlight/Play Store Beta)
 3. 📋 Coletar feedback de beta testers
@@ -982,15 +1103,18 @@
 ## 📊 RESUMO DE PROGRESSO
 
 **Total de Features:**
+
 - ✅ **Concluídas:** 32/32 (100%)
 - 📋 **Planejadas:** 8 (pós-lançamento)
 
 **Cobertura de Testes:**
+
 - ✅ **237 testes** implementados
 - ✅ **223 passing** (94.1%)
 - ✅ **16 test suites** (100% passing)
 
 **Repositórios:**
+
 - ✅ Backend: https://github.com/PatrickAvila/guia-aventureiro-backEnd
 - ✅ Mobile: https://github.com/PatrickAvila/guia-aventureiro-mobile
 - ✅ Automation: https://github.com/PatrickAvila/guia-aventureiro-automation
