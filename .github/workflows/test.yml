@@ -16,7 +16,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       mongodb:
         image: mongo:7.0
@@ -52,14 +52,15 @@ jobs:
 
       - name: ⏳ Aguardar MongoDB
         run: |
-          npx wait-on mongodb://mongodb:27017 -t 30000 2>/dev/null || true
+          npx wait-on tcp:127.0.0.1:27017 -t 30000
 
       - name: 🚀 Iniciar Backend em Background
         working-directory: ./backend
         env:
           NODE_ENV: test
           TEST_MODE: 'true'
-          MONGODB_URI: mongodb://mongodb:27017/guia-aventureiro-test
+          MONGO_URI: mongodb://127.0.0.1:27017/guia-aventureiro-test
+          MONGODB_URI: mongodb://127.0.0.1:27017/guia-aventureiro-test
           JWT_SECRET: test-secret-key
           STRIPE_SECRET_KEY: sk_test_dummy
           GOOGLE_MAPS_API_KEY: test-key
