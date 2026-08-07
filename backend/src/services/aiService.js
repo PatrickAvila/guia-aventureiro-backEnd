@@ -94,12 +94,24 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
   return { days: mockDays };
 };
 
+const shouldUseMockItinerary = () => {
+  if (process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true') {
+    return true;
+  }
+
+  return !process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here';
+};
+
 const generateItinerary = async ({ destination, startDate, endDate, budget, preferences }) => {
   try {
-    // Verificar se tem API key configurada
-    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
-      logger.warn('⚠️  GROQ_API_KEY não configurada. Usando MOCK temporário.');
-      logger.info('📝 Configure sua chave em: https://console.groq.com/keys');
+    if (shouldUseMockItinerary()) {
+      if (process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true') {
+        logger.info('🧪 Ambiente de teste detectado. Usando roteiro mock.');
+      } else {
+        logger.warn('⚠️  GROQ_API_KEY não configurada. Usando MOCK temporário.');
+        logger.info('📝 Configure sua chave em: https://console.groq.com/keys');
+      }
+
       return generateMockItinerary({ destination, startDate, endDate });
     }
     logger.info('🚀 Gerando roteiro com Groq AI (Llama 3.1 70B)...');
