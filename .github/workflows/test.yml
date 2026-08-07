@@ -29,10 +29,12 @@ jobs:
           - 27017:27017
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -87,7 +89,7 @@ jobs:
         run: npm run test:coverage || true
 
       - name: 📤 Upload Coverage para Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: always()
         with:
           files: ./automation/coverage/lcov.info
@@ -114,7 +116,7 @@ jobs:
 
       - name: 💾 Salvar Artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -142,8 +144,9 @@ jobs:
 
     steps:
       - name: 📊 Event File
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: test-results
 
