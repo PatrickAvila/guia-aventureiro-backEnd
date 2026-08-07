@@ -75,8 +75,19 @@ jobs:
           CLOUDINARY_API_SECRET: test
         run: |
           npm start > /tmp/backend.log 2>&1 &
-          sleep 5
-          curl -f http://localhost:3000/health || (cat /tmp/backend.log && exit 1)
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health | grep -q '"status":"OK"'; then
+              echo "✅ Backend saudável e pronto para os testes"
+              exit 0
+            fi
+
+            echo "Aguardando backend ficar saudável... tentativa $i/30"
+            sleep 2
+          done
+
+          echo "❌ Backend não ficou saudável a tempo"
+          cat /tmp/backend.log
+          exit 1
 
       - name: 🧪 Executar Testes com Retry
         working-directory: ./automation
