@@ -74,20 +74,40 @@ jobs:
           CLOUDINARY_API_KEY: test
           CLOUDINARY_API_SECRET: test
         run: |
-          npm start > /tmp/backend.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS http://localhost:3000/health | grep -q '"status":"OK"'; then
-              echo "✅ Backend saudável e pronto para os testes"
-              exit 0
-            fi
+          try_start_backend() {
+            local mongo_uri="$1"
+            echo "Tentando iniciar backend com MONGO_URI=$mongo_uri"
 
-            echo "Aguardando backend ficar saudável... tentativa $i/30"
-            sleep 2
-          done
+            export MONGO_URI="$mongo_uri"
+            export MONGODB_URI="$mongo_uri"
 
-          echo "❌ Backend não ficou saudável a tempo"
-          cat /tmp/backend.log
-          exit 1
+            npm start > /tmp/backend.log 2>&1 &
+            BACKEND_PID=$!
+
+            for i in {1..30}; do
+              if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+                echo "Processo backend encerrou prematuramente"
+                cat /tmp/backend.log
+                return 1
+              fi
+
+              if curl -fsS http://localhost:3000/health | grep -q '"status":"OK"'; then
+                echo "✅ Backend saudável e pronto para os testes"
+                return 0
+              fi
+
+              echo "Aguardando backend ficar saudável... tentativa $i/30"
+              sleep 2
+            done
+
+            kill "$BACKEND_PID" 2>/dev/null || true
+            echo "Backend não ficou saudável dentro do tempo com URI: $mongo_uri"
+            cat /tmp/backend.log
+            return 1
+          }
+
+          try_start_backend "mongodb://127.0.0.1:27017/guia-aventureiro-test" \
+            || try_start_backend "mongodb://mongodb:27017/guia-aventureiro-test"
 
       - name: 🧪 Executar Testes com Retry
         working-directory: ./automation
