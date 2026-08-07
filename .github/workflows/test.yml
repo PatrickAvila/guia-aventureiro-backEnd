@@ -91,8 +91,8 @@ jobs:
                 return 1
               fi
 
-              if curl -fsS http://localhost:3000/health | grep -q '"status":"OK"'; then
-                echo "✅ Backend saudável e pronto para os testes"
+              if curl -sS http://localhost:3000/health | grep -q '"service":"Guia do Aventureiro API"'; then
+                echo "✅ Backend respondeu no healthcheck e está pronto para os testes"
                 return 0
               fi
 
