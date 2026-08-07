@@ -1,5 +1,9 @@
 name: 🤖 Testes Automatizados
 
+permissions:
+  contents: read
+  checks: write
+
 on:
   push:
     branches: [main, develop]
@@ -34,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
@@ -68,6 +72,7 @@ jobs:
           MONGO_URI: mongodb://127.0.0.1:27017/guia-aventureiro-test
           MONGODB_URI: mongodb://127.0.0.1:27017/guia-aventureiro-test
           JWT_SECRET: test-secret-key
+          JWT_REFRESH_SECRET: test-refresh-secret-key
           STRIPE_SECRET_KEY: sk_test_dummy
           GROQ_API_KEY: test-groq-key
           GOOGLE_MAPS_API_KEY: test-key
