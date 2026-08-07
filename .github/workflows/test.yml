@@ -69,6 +69,7 @@ jobs:
           MONGODB_URI: mongodb://127.0.0.1:27017/guia-aventureiro-test
           JWT_SECRET: test-secret-key
           STRIPE_SECRET_KEY: sk_test_dummy
+          GROQ_API_KEY: test-groq-key
           GOOGLE_MAPS_API_KEY: test-key
           CLOUDINARY_NAME: test
           CLOUDINARY_API_KEY: test
