@@ -9,6 +9,7 @@ const Message = require('../models/Message');
 const jwt = require('jsonwebtoken');
 const { recordFailedAttempt, clearFailedAttempts } = require('../middleware/ipBlocker');
 const { hashRefreshToken, compareRefreshToken } = require('../utils/tokenSecurity');
+const logger = require('../utils/logger');
 
 const toSafeUser = (user) => {
   if (!user) return null;
@@ -27,14 +28,17 @@ const toSafeUser = (user) => {
 };
 
 const sendInternalError = (res, message, error) => {
+  logger.error(`authController internal error: ${error?.message || 'unknown error'}`);
   return res.status(500).json({ message });
 };
 
 // Gerar tokens
 const generateTokens = (userId) => {
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
 
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '7d' });
 
   return { accessToken, refreshToken };
 };
