@@ -1,5 +1,6 @@
 // backend/src/controllers/notificationController.js
 const Notification = require('../models/Notification');
+const logger = require('../utils/logger');
 
 const toSafeNotification = (notification) => {
   if (!notification) return null;
@@ -57,7 +58,7 @@ exports.getNotifications = async (req, res) => {
       unreadCount,
     });
   } catch (error) {
-    console.error('Erro ao buscar notificações:', error);
+    logger.error('Erro ao buscar notificações');
     res.status(500).json({ message: 'Erro ao buscar notificações' });
   }
 };
@@ -75,7 +76,7 @@ exports.getUnreadCount = async (req, res) => {
     const count = await Notification.getUnreadCount(req.user._id);
     res.json({ count });
   } catch (error) {
-    console.error('Erro ao contar notificações não lidas:', error);
+    logger.error('Erro ao contar notificações não lidas');
     res.status(500).json({ message: 'Erro ao contar notificações' });
   }
 };
@@ -115,7 +116,7 @@ exports.markAsRead = async (req, res) => {
       notification: toSafeNotification(notification),
     });
   } catch (error) {
-    console.error('Erro ao marcar notificação como lida:', error);
+    logger.error('Erro ao marcar notificação como lida');
     res.status(500).json({ message: 'Erro ao atualizar notificação' });
   }
 };
@@ -140,7 +141,7 @@ exports.markAllAsRead = async (req, res) => {
       count: result.modifiedCount,
     });
   } catch (error) {
-    console.error('Erro ao marcar todas as notificações como lidas:', error);
+    logger.error('Erro ao marcar todas as notificações como lidas');
     res.status(500).json({ message: 'Erro ao atualizar notificações' });
   }
 };
@@ -168,7 +169,7 @@ exports.deleteNotification = async (req, res) => {
 
     res.json({ message: 'Notificação deletada com sucesso' });
   } catch (error) {
-    console.error('Erro ao deletar notificação:', error);
+    logger.error('Erro ao deletar notificação');
     res.status(500).json({ message: 'Erro ao deletar notificação' });
   }
 };
@@ -193,7 +194,7 @@ exports.deleteAllRead = async (req, res) => {
       count: result.deletedCount,
     });
   } catch (error) {
-    console.error('Erro ao deletar notificações:', error);
+    logger.error('Erro ao deletar notificações');
     res.status(500).json({ message: 'Erro ao deletar notificações' });
   }
 };
@@ -233,7 +234,7 @@ exports.createNotification = async (req, res) => {
       notification: toSafeNotification(notification),
     });
   } catch (error) {
-    console.error('Erro ao criar notificação:', error);
+    logger.error('Erro ao criar notificação');
     res.status(500).json({ message: 'Erro ao criar notificação' });
   }
 };
@@ -263,7 +264,7 @@ exports.createNotificationHelper = async (
 
     return notification;
   } catch (error) {
-    console.error('Erro ao criar notificação (helper):', error);
+    logger.error('Erro ao criar notificação (helper)');
     return null;
   }
 };

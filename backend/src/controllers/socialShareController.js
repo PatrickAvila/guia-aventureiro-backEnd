@@ -31,6 +31,7 @@ exports.getShareStats = async (req, res) => {
     }
 
     res.json({
+      itineraryId: itinerary._id,
       stats: {
         views: itinerary.views || 0,
         likes: itinerary.likes?.length || 0,

@@ -1,3 +1,5 @@
+<!-- markdownlint-disable -->
+
 # 🗺️ ROADMAP - GUIA DO AVENTUREIRO
 
 **Última Atualização:** 19/02/2026

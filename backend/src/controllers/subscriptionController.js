@@ -336,7 +336,7 @@ exports.getStripeConfig = async (req, res) => {
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
     });
   } catch (error) {
-    logger.error(`❌ Erro em getStripeConfig: ${error.message}`);
+    logger.error('Erro em getStripeConfig');
     res.status(500).json({ error: 'config_error' });
   }
 };
@@ -407,7 +407,7 @@ exports.createCheckoutSession = async (req, res) => {
       cancelUrl,
     });
   } catch (error) {
-    logger.error(`❌ Erro em createCheckoutSession: ${error.message}`);
+    logger.error('Erro em createCheckoutSession');
 
     if (error.message.includes('já possui')) {
       return res.status(400).json({
@@ -486,7 +486,7 @@ exports.handleWebhook = async (req, res) => {
 
     res.json({ received: true });
   } catch (error) {
-    logger.error(`❌ Erro ao processar webhook: ${error.message}`);
+    logger.error('Erro ao processar webhook');
     res
       .status(500)
       .json(
@@ -543,7 +543,7 @@ const handleSubscriptionCreated = async (subscription) => {
 
     logger.info(`✅ Upgrade para Premium concluído: user ${userId}`);
   } catch (error) {
-    logger.error(`❌ Erro em handleSubscriptionCreated: ${error.message}`);
+    logger.error('Erro em handleSubscriptionCreated');
     throw error;
   }
 };
@@ -600,7 +600,7 @@ const handleCheckoutCompleted = async (session) => {
     // TODO: Enviar email de boas-vindas
     // TODO: Notificação push
   } catch (error) {
-    logger.error(`❌ Erro em handleCheckoutCompleted: ${error.message}`);
+    logger.error('Erro em handleCheckoutCompleted');
     throw error;
   }
 };
@@ -645,7 +645,7 @@ const handleSubscriptionUpdated = async (subscription) => {
       // TODO: Enviar email de cobrança
     }
   } catch (error) {
-    logger.error(`❌ Erro em handleSubscriptionUpdated: ${error.message}`);
+    logger.error('Erro em handleSubscriptionUpdated');
     throw error;
   }
 };
@@ -672,7 +672,7 @@ const handleSubscriptionDeleted = async (subscription) => {
     // TODO: Enviar email de feedback
     // TODO: Notificação push
   } catch (error) {
-    logger.error(`❌ Erro em handleSubscriptionDeleted: ${error.message}`);
+    logger.error('Erro em handleSubscriptionDeleted');
     throw error;
   }
 };
@@ -706,7 +706,7 @@ const handlePaymentSucceeded = async (invoice) => {
       logger.info(`✅ Status atualizado: user ${subscription.user} -> active`);
     }
   } catch (error) {
-    logger.error(`❌ Erro em handlePaymentSucceeded: ${error.message}`);
+    logger.error('Erro em handlePaymentSucceeded');
     throw error;
   }
 };
@@ -732,7 +732,7 @@ const handlePaymentFailed = async (invoice) => {
       // TODO: Enviar email de notificação
     }
   } catch (error) {
-    logger.error(`❌ Erro em handlePaymentFailed: ${error.message}`);
+    logger.error('Erro em handlePaymentFailed');
     throw error;
   }
 };
@@ -780,7 +780,7 @@ exports.cancelStripeSubscription = async (req, res) => {
       endsAt: subscription.renewsAt,
     });
   } catch (error) {
-    logger.error(`❌ Erro em cancelStripeSubscription: ${error.message}`);
+    logger.error('Erro em cancelStripeSubscription');
     res
       .status(500)
       .json(
@@ -821,7 +821,7 @@ exports.createCustomerPortalSession = async (req, res) => {
 
     res.json({ url });
   } catch (error) {
-    logger.error(`❌ Erro em createCustomerPortalSession: ${error.message}`);
+    logger.error('Erro em createCustomerPortalSession');
     res
       .status(500)
       .json(
@@ -858,7 +858,7 @@ exports.getStripeSubscriptionStatus = async (req, res) => {
       features: subscription.features,
     });
   } catch (error) {
-    logger.error(`❌ Erro em getStripeSubscriptionStatus: ${error.message}`);
+    logger.error('Erro em getStripeSubscriptionStatus');
     res
       .status(500)
       .json(

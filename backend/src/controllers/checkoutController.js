@@ -30,7 +30,6 @@ exports.createCheckoutSession = async (req, res) => {
     if (subscription?.plan === 'premium' && subscription?.status === 'active') {
       return res.status(400).json({
         error: 'Você já possui um plano Premium ativo',
-        subscription,
       });
     }
 
@@ -76,7 +75,7 @@ exports.createCheckoutSession = async (req, res) => {
       cancelUrl,
     });
   } catch (error) {
-    logger.error('Erro ao criar checkout session:', error);
+    logger.error('Erro ao criar checkout session');
     const errorResponse = {
       error: 'Erro ao criar sessão de pagamento',
     };
@@ -198,7 +197,7 @@ exports.verifyCheckoutSession = async (req, res) => {
       updated: shouldActivatePremium,
     });
   } catch (error) {
-    logger.error('Erro ao verificar checkout session:', error);
+    logger.error('Erro ao verificar checkout session');
     const errorResponse = {
       error: 'Erro ao verificar sessão',
     };

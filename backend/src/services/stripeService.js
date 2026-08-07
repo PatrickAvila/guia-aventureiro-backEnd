@@ -86,7 +86,7 @@ const createCheckoutSession = async (userId, priceId, successUrl, cancelUrl) => 
       url: session.url,
     };
   } catch (error) {
-    logger.error(`❌ Erro ao criar checkout session: ${error.message}`);
+    logger.error('Erro ao criar checkout session');
     throw error;
   }
 };
@@ -108,7 +108,7 @@ const createCustomerPortal = async (customerId, returnUrl) => {
 
     return { url: session.url };
   } catch (error) {
-    logger.error(`❌ Erro ao criar customer portal: ${error.message}`);
+    logger.error('Erro ao criar customer portal');
     throw error;
   }
 };
@@ -156,7 +156,7 @@ const upgradeUserToPremium = async (userId, subscriptionData) => {
 
     return subscription;
   } catch (error) {
-    logger.error(`❌ Erro ao fazer upgrade para Premium: ${error.message}`);
+    logger.error('Erro ao fazer upgrade para Premium');
     throw error;
   }
 };
@@ -204,7 +204,7 @@ const downgradeUserToFree = async (userId, reason = 'Assinatura cancelada') => {
 
     return subscription;
   } catch (error) {
-    logger.error(`❌ Erro ao fazer downgrade para Free: ${error.message}`);
+    logger.error('Erro ao fazer downgrade para Free');
     throw error;
   }
 };
@@ -233,7 +233,7 @@ const cancelSubscription = async (subscriptionId, immediately = false) => {
 
     return canceledSubscription;
   } catch (error) {
-    logger.error(`❌ Erro ao cancelar assinatura Stripe: ${error.message}`);
+    logger.error('Erro ao cancelar assinatura Stripe');
     throw error;
   }
 };
@@ -277,7 +277,7 @@ const syncSubscriptionStatus = async (userId) => {
 
     return subscription;
   } catch (error) {
-    logger.error(`❌ Erro ao sincronizar status: ${error.message}`);
+    logger.error('Erro ao sincronizar status');
     throw error;
   }
 };
