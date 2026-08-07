@@ -96,8 +96,15 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
 
 const generateItinerary = async ({ destination, startDate, endDate, budget, preferences }) => {
   try {
-    // Verificar se tem API key configurada
-    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
+    const groqApiKey = process.env.GROQ_API_KEY;
+    const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+    const isPlaceholderKey =
+      !groqApiKey ||
+      groqApiKey === 'your_groq_api_key_here' ||
+      groqApiKey.startsWith('test-');
+
+    // Em testes (ou sem chave válida), nunca depender da API externa
+    if (isTestMode || isPlaceholderKey) {
       logger.warn('⚠️  GROQ_API_KEY não configurada. Usando MOCK temporário.');
       logger.info('📝 Configure sua chave em: https://console.groq.com/keys');
       return generateMockItinerary({ destination, startDate, endDate });
