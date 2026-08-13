@@ -13,11 +13,11 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
   const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
   const mockDays = [];
-  
+
   for (let i = 1; i <= days; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + (i - 1));
-    
+
     mockDays.push({
       dayNumber: i,
       title: `Explorando ${destination.city} - Dia ${i}`,
@@ -29,7 +29,7 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
           location: {
             name: 'Café Central',
             address: `Centro de ${destination.city}`,
-            coordinates: { lat: -23.550520, lng: -46.633308 },
+            coordinates: { lat: -23.55052, lng: -46.633308 },
           },
           estimatedCost: 30,
           duration: 60,
@@ -42,7 +42,7 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
           location: {
             name: 'Centro Histórico',
             address: `Centro de ${destination.city}`,
-            coordinates: { lat: -23.551520, lng: -46.634308 },
+            coordinates: { lat: -23.55152, lng: -46.634308 },
           },
           estimatedCost: 50,
           duration: 180,
@@ -55,7 +55,7 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
           location: {
             name: 'Restaurante Tradicional',
             address: `Centro de ${destination.city}`,
-            coordinates: { lat: -23.552520, lng: -46.635308 },
+            coordinates: { lat: -23.55252, lng: -46.635308 },
           },
           estimatedCost: 80,
           duration: 90,
@@ -68,7 +68,7 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
           location: {
             name: 'Mercado Municipal',
             address: `Centro de ${destination.city}`,
-            coordinates: { lat: -23.553520, lng: -46.636308 },
+            coordinates: { lat: -23.55352, lng: -46.636308 },
           },
           estimatedCost: 100,
           duration: 120,
@@ -81,7 +81,7 @@ const generateMockItinerary = ({ destination, startDate, endDate }) => {
           location: {
             name: 'Restaurante Panorâmico',
             address: `Centro de ${destination.city}`,
-            coordinates: { lat: -23.554520, lng: -46.637308 },
+            coordinates: { lat: -23.55452, lng: -46.637308 },
           },
           estimatedCost: 120,
           duration: 120,
@@ -99,9 +99,7 @@ const generateItinerary = async ({ destination, startDate, endDate, budget, pref
     const groqApiKey = process.env.GROQ_API_KEY;
     const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
     const isPlaceholderKey =
-      !groqApiKey ||
-      groqApiKey === 'your_groq_api_key_here' ||
-      groqApiKey.startsWith('test-');
+      !groqApiKey || groqApiKey === 'your_groq_api_key_here' || groqApiKey.startsWith('test-');
 
     // Em testes (ou sem chave válida), nunca depender da API externa
     if (isTestMode || isPlaceholderKey) {
@@ -110,7 +108,7 @@ const generateItinerary = async ({ destination, startDate, endDate, budget, pref
       return generateMockItinerary({ destination, startDate, endDate });
     }
     logger.info('🚀 Gerando roteiro com Groq AI (Llama 3.1 70B)...');
-    
+
     const diffTime = Math.abs(new Date(endDate) - new Date(startDate));
     const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
@@ -161,7 +159,8 @@ Retorne APENAS um JSON válido neste formato exato:
       messages: [
         {
           role: 'system',
-          content: 'Você é um assistente de viagens especializado em criar roteiros detalhados e otimizados. Sempre responda APENAS com JSON válido, sem texto adicional.',
+          content:
+            'Você é um assistente de viagens especializado em criar roteiros detalhados e otimizados. Sempre responda APENAS com JSON válido, sem texto adicional.',
         },
         {
           role: 'user',
@@ -175,7 +174,7 @@ Retorne APENAS um JSON válido neste formato exato:
 
     const content = completion.choices[0].message.content;
     logger.info('✅ Roteiro gerado com sucesso!');
-    
+
     const response = JSON.parse(content);
     return response;
   } catch (error) {

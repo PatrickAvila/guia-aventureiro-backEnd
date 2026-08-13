@@ -5,7 +5,9 @@ const getRefreshTokenPepper = () => {
     process.env.REFRESH_TOKEN_PEPPER || process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 
   if (!pepper) {
-    throw new Error('REFRESH_TOKEN_PEPPER, JWT_REFRESH_SECRET ou JWT_SECRET precisa estar configurado');
+    throw new Error(
+      'REFRESH_TOKEN_PEPPER, JWT_REFRESH_SECRET ou JWT_SECRET precisa estar configurado'
+    );
   }
 
   return pepper;

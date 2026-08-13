@@ -30,7 +30,9 @@ const connectDB = async () => {
       return;
     } catch (error) {
       lastError = error;
-      console.error(`❌ Tentativa ${attempt}/${maxRetries} falhou ao conectar MongoDB: ${error.message}`);
+      console.error(
+        `❌ Tentativa ${attempt}/${maxRetries} falhou ao conectar MongoDB: ${error.message}`
+      );
 
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
@@ -38,7 +40,10 @@ const connectDB = async () => {
     }
   }
 
-  console.error('❌ Erro ao conectar MongoDB após retries:', lastError?.message || 'erro desconhecido');
+  console.error(
+    '❌ Erro ao conectar MongoDB após retries:',
+    lastError?.message || 'erro desconhecido'
+  );
   console.error('\n💡 Possíveis soluções:');
   console.error('   1. Verifique se o cluster MongoDB Atlas está ativo');
   console.error('   2. Adicione seu IP na whitelist do Atlas (0.0.0.0/0 para qualquer IP)');
