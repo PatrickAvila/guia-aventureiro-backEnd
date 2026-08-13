@@ -1,3 +1,7 @@
 [submodule "automation"]
 	path = automation
 	url = https://github.com/guia-aventureiro/guia-aventureiro-automation.git
+
+[submodule "mobile"]
+	path = mobile
+	url = https://github.com/PatrickAvila/guia-aventureiro-mobile.git
