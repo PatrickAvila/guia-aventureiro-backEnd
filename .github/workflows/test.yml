@@ -10,12 +10,14 @@ on:
     paths:
       - 'backend/**'
       - 'automation/**'
+      - '.gitmodules'
       - '.github/workflows/test.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'backend/**'
       - 'automation/**'
+      - '.gitmodules'
 
 jobs:
   test:
